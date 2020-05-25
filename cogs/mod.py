@@ -1,0 +1,234 @@
+import discord
+from discord.ext import commands
+import logging
+from utils import is_staff, not_staff, is_admin
+from datetime import datetime
+
+
+class Mod(commands.Cog):
+    def __init__(self, bot, db):
+        self.bot = bot
+        self.db = db
+
+# Listeners
+
+    # Bans blacklisted users if they are unbanned
+    @commands.Cog.listener()
+    async def on_member_unban(self, guild, user: discord.User):
+        if str(user.id) in self.db.find_guild({'_id': guild.id})[0]['blacklist']:
+            await guild.ban(user, reason='User has been blacklisted by an admin.')
+    
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        roles = self.db.find_guild({'_id': member.guild.id})[0]['autoroles']
+        for r in roles:
+            await member.add_roles(member.guild.get_role(r))
+
+# Commands
+
+    @is_staff()
+    @commands.command()
+    async def autorole(self, ctx, role: discord.Role):
+        roles = self.db.find_guild({'_id': ctx.guild.id})[0]['autoroles']
+        roles.append(role.id)
+        self.db.update_guild({'_id': ctx.guild.id}, {'autoroles': roles})
+        for m in ctx.guild.members:
+            await m.add_roles(role)
+        await ctx.send(f'Added **{role}** to autoroles.')
+
+    @is_staff()
+    @commands.command()
+    async def stickyrole(self, ctx, role: discord.Role):
+        roles = self.db.find_guild({'_id': ctx.guild.id})[0]['sticky_roles']
+        roles.append(role.id)
+        self.db.update_guild({'_id': ctx.guild.id}, {'sticky_roles': roles})
+        await ctx.send(f'Added **{role}** to sticky roles.')
+
+    @is_staff()
+    @commands.command()
+    async def purge(self, ctx, amount=10):
+        await ctx.channel.purge(limit=amount+1)
+        await ctx.send(f'Purged **{amount}** messages.', delete_after=3)
+
+
+    @commands.command()
+    async def blacklist(self, ctx, user_id):
+        if is_admin(ctx.author):
+            dbg = self.db.find_guild({'_id': ctx.guild.id})[0]
+            dbg['blacklist'].append(user_id)
+            self.db.update_guild({'_id': ctx.guild.id}, dbg)
+            user = await self.bot.fetch_user(user_id)
+            await ctx.guild.ban(user, reason='User has been blacklisted by an admin.')
+            await ctx.send(f'Added **{user}** to the blacklist.')
+
+    @is_staff()
+    @commands.command()
+    async def mute(self, ctx, member: discord.Member, reason=None):
+        modrole = ctx.guild.get_role(self.db.find_guild({'_id': ctx.guild.id})[0]['modrole_id'])
+        if not_staff(modrole, member) or is_admin(ctx.author):
+            muterole = ctx.guild.get_role(self.db.find_guild({'_id': ctx.guild.id})[0]['muterole_id'])
+            await member.add_roles(muterole)
+            await ctx.send(f'{member.mention} has been muted!')
+            dbguild = self.db.find_guild({'_id': ctx.guild.id})[0]
+            mlchannel = ctx.guild.get_channel(dbguild['modlog_channel_id'])
+            case = len(dbguild['modlog_entries']) + 1
+            p = dbguild['prefix']
+            if reason == None:
+                reason = f'No reason given, use `{p}reason {case} <text>` to add one'
+            embed = discord.Embed(color=discord.Color(
+                0xff5757), title=f'mute | case {case}', timestamp=datetime.utcnow())
+            embed.add_field(name="Offender", value=f'{member}\n{member.mention}\n{member.id}')
+            embed.add_field(name="Responsible Moderator", value=f'{ctx.author}\n{ctx.author.mention}\n{ctx.author.id}')
+            embed.add_field(name="Reason", value=reason)
+            msg = await mlchannel.send(embed=embed)
+            dbguild['modlog_entries'].append(msg.id)
+            self.db.update_guild({'_id': ctx.guild.id}, dbguild)
+        else:
+            await ctx.send(f'You lack the permissions to mute **{member}**!')
+
+    @is_staff()
+    @commands.command()
+    async def unmute(self, ctx, member: discord.Member):
+        modrole = ctx.guild.get_role(self.db.find_guild({'_id': ctx.guild.id})[0]['modrole_id'])
+        if not_staff(modrole, member) or is_admin(ctx.author):
+            muterole = ctx.guild.get_role(self.db.find_guild({'_id': ctx.guild.id})[0]['muterole_id'])
+            await member.remove_roles(muterole)
+            await ctx.send(f'{member.mention} has been unmuted!')
+            dbguild = self.db.find_guild({'_id': ctx.guild.id})[0]
+            mlchannel = ctx.guild.get_channel(dbguild['modlog_channel_id'])
+            case = len(dbguild['modlog_entries']) + 1
+            p = dbguild['prefix']
+            if reason == None:
+                reason = f'No reason given, use `{p}reason {case} <text>` to add one'
+            embed = discord.Embed(color=discord.Color(
+                0x2ecc71), title=f'unmute | case {case}', timestamp=datetime.utcnow())
+            embed.add_field(name="Offender", value=f'{member}\n{member.mention}\n{member.id}')
+            embed.add_field(name="Responsible Moderator", value=f'{ctx.author}\n{ctx.author.mention}\n{ctx.author.id}')
+            embed.add_field(name="Reason", value=reason)
+            msg = await mlchannel.send(embed=embed)
+            dbguild['modlog_entries'].append(msg.id)
+            self.db.update_guild({'_id': ctx.guild.id}, dbguild)
+        else:
+            await ctx.send(f'You lack the permissions to unmute {member.mention}! You cannot unmute moderators.')
+
+    @is_staff()
+    @commands.command()
+    async def move(self, ctx, ch1: discord.VoiceChannel, ch2: discord.VoiceChannel):
+        for member in ch1.members:
+            await member.move_to(ch2)
+
+    @commands.command()
+    async def prefix(self, ctx, arg, prefix):
+        if is_admin(ctx.author):
+            prefixes = self.db.find_guild({'_id': ctx.guild.id})[0]['prefix']
+            if prefixes != prefixes[0]:
+                if arg == 'add':
+                    if 0 < len(prefix) < 5:
+                        prefixes.append(prefix)
+                        self.db.update_guild({'_id': ctx.guild.id}, {'prefix': prefixes})
+                        await ctx.send(f'Added **{prefix}** to prefixes.')
+                    else:
+                        await ctx.send(f'**{prefix}** is too long! Prefixes must be between 1 and 4 characters.')
+                elif arg == 'remove':
+                    prefixes.remove(prefix)
+                    self.db.update_guild({'_id': ctx.guild.id}, {'prefix': prefixes})
+                    await ctx.send(f'Removed **{prefix}** to prefixes.')
+            else:
+                await ctx.send(f"You can't alter the prefix **{prefix}**!")
+        else:
+            await ctx.send('You lack the permissions to set the server prefix!')
+
+    @commands.command()
+    async def muterole(self, ctx, role: discord.Role):
+        if is_admin(ctx.author):
+            if role in ctx.guild.roles:
+                if role.name == '@everyone':
+                    await ctx.send('You cannot make everyone a mod!')
+                else:
+                    for tc in ctx.guild.text_channels:
+                        await tc.set_permissions(role, send_messages=False)
+
+                    for vc in ctx.guild.voice_channels:
+                        await vc.set_permissions(role, speak=False)
+
+                    for cat in ctx.guild.categories:
+                        await cat.set_permissions(role, send_messages=False, speak=False)
+
+                    self.db.update_guild({'_id': ctx.guild.id}, {'muterole_id': role.id})
+                    await ctx.send(f'Mute role set to **{role}**')
+        else:
+            await ctx.send('You must be an admin to set the muterole!')
+    
+    
+    @commands.command()
+    async def mrupdate(self, ctx):
+        if is_admin(ctx.author):
+            muterole_id = self.db.find_guild({'_id': ctx.guild.id})[0]['muterole_id']
+            if muterole_id != None:
+                mute = ctx.guild.get_role(muterole_id)
+                for tc in ctx.guild.text_channels:
+                    await tc.set_permissions(mute, send_messages=False)
+
+                for vc in ctx.guild.voice_channels:
+                    await vc.set_permissions(mute, speak=False)
+
+                for cat in ctx.guild.categories:
+                    await cat.set_permissions(mute, send_messages=False, speak=False)
+
+                await ctx.send(f'Success! The role **{mute}** has been updated with channel overrides!')
+
+            else:
+                await ctx.send('No muterole is set!')
+
+    @commands.command()
+    async def modrole(self, ctx, role: discord.Role):
+        if is_admin(ctx.author):
+            if role.name == '@everyone':
+                await ctx.send('You cannot make everyone a mod!')
+            else:
+                self.db.update_guild({'_id': ctx.guild.id}, {'modrole_id': role.id})
+                await ctx.send(f'Moderator role set to **{role}**')
+        else:
+            await ctx.send('You must be an admin to set the modrole!')
+
+    @is_staff()
+    @commands.command()
+    async def verify(self, ctx, member: discord.Member, *msg_ids):
+        g = self.db.find_guild({'_id': ctx.guild.id})[0]
+        modrole = ctx.guild.get_role(g['modrole_id'])
+        msgs = []
+        for mid in msg_ids:
+            msgs.append(await ctx.channel.fetch_message(mid))
+        content = [msg.content for msg in msgs]
+        if modrole in ctx.author.roles or is_admin(ctx.author):
+            g['members'][str(member.id)]['verified'] = True
+            self.db.update_guild({'_id': ctx.guild.id}, g)
+            verify = ctx.guild.get_role(g['verify_role_id'])
+            await member.add_roles(verify)
+            channel = ctx.guild.get_channel(g['verify_log_channel_id'])
+            if channel != None:
+                embed = discord.Embed(colour=discord.Colour(0x2ecc71), timestamp=datetime.utcnow())
+                embed.set_footer(text="Verification Log", icon_url=ctx.guild.icon_url)
+                embed.add_field(name="Responsible Moderator:", value=ctx.author.mention, inline=False)
+                embed.add_field(name="Member:", value=member.mention, inline=False)
+                embed.add_field(name="Message:", value='\n'.join(content), inline=False)
+                await channel.send(embed=embed)
+            await ctx.message.delete()
+            for msg in msgs:
+                await msg.delete()
+
+    @commands.command()
+    async def verifyrole(self, ctx, role: discord.Role):
+        if is_admin(ctx.author):
+            self.db.update_guild({'_id': ctx.guild.id}, {'verify_role_id': role.id})
+            await ctx.send(f'Set verification role to **{role.name}**')
+        else:
+            await ctx.send('You must be an admin to set the verify role!')
+
+    @commands.command()
+    async def verifylog(self, ctx, channel: discord.TextChannel):
+        if is_admin(ctx.author):
+            self.db.update_guild({'_id': ctx.guild.id}, {'verify_log_channel_id': channel.id})
+            await ctx.send(f'Set verification channel to {channel.mention}')
+        else:
+            await ctx.send('You must be an admin to set the verify log!')
