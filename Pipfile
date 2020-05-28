@@ -4,8 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-asyncpg = "*"
 psycopg2 = "*"
+discord = "*"
+humanize = "*"
+bs4 = "*"
+pytz = "*"
+python-dateutil = "*"
+sympy = "*"
 
 [dev-packages]
 pylint = "*"

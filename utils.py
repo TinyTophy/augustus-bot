@@ -82,7 +82,7 @@ def load_guilds(db, guilds):
 
 def get_prefix(bot, message):
     try:
-        return bot.cogs['Misc'].db.find_guild({'_id': message.guild.id})[0]['prefix']
+        return bot.db.get_prefixes()
     except Exception as e:
         print(e)
 

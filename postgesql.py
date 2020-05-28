@@ -16,14 +16,15 @@ class db:
         )
         self.cur = self.conn.cursor()
         self.cur.execute(open('schema.sql', 'r').read())
+        self.conn.commit()
 
     # Add Functions
-    def add_guild(self, guild_id):
+    def add_guild(self, guild):
         self.cur.execute(
-            "INSERT INTO Guild (id) VALUES (%s) ON CONFLICT DO NOTHING", [guild_id])
+            "INSERT INTO Guild (id) VALUES (%s) ON CONFLICT DO NOTHING", [guild.id])
         self.conn.commit()
         self.logger.log(level=logging.INFO,
-                        msg=f'Added guild {guild_id} to database')
+                        msg=f'Added guild {guild.id} to database')
 
     def add_member(self, member):
         self.cur.execute(
@@ -146,6 +147,8 @@ class db:
     def get_rr(self, guild_id, message_id, reaction):
         return [record for record in self.cur.execute('SELECT * FROM Reaction_Role WHERE guild_id=%s AND message_id=%s AND reaction=%s', (guild_id, message_id, reaction))]
 
+    # def get_prefixes(self, guild_id)
+
     # Get All Functions
 
     def get_all_guilds(self):
@@ -184,8 +187,3 @@ class db:
             'DELETE FROM Member_Role WHERE role_id=%s AND member_id=%s', (role_id, member_id))
         self.conn.commit()
 
-
-db = db(logging.getLogger('test'))
-db.add_guild(123)
-db.cur.execute("SELECT * FROM Guild;")
-print(db.cur.fetchone())
