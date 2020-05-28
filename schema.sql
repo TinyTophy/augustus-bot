@@ -36,10 +36,11 @@ CREATE TABLE IF NOT EXISTS Member (
 	FOREIGN KEY(guild_id) REFERENCES Guild(id),
 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
 );
--- CREATE TABLE IF NOT EXISTS Discord_Role (
--- 	role_id	INTEGER PRIMARY KEY,
--- 	guild_id INTEGER NOT NULL
--- );
+CREATE TABLE IF NOT EXISTS Discord_Role (
+	role_id	BIGINT PRIMARY KEY,
+	guild_id BIGINT NOT NULL,
+	FOREIGN KEY(guild_id) REFERENCES Guild(id)
+);
 -- CREATE TABLE IF NOT EXISTS Member_Role (
 -- 	id SERIAL PRIMARY KEY,
 -- 	role_id INTEGER NOT NULL,

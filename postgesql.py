@@ -24,6 +24,12 @@ class db:
         self.cur.execute("INSERT INTO Guild (id, autoclose) VALUES (%s, %s) ON CONFLICT DO NOTHING", [guild.id, False])
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added guild {guild.id} to database')
+    
+    def add_guilds(self, guilds):
+        insert = ', '.join([f'({g.id}, false)' for g in guilds])
+        self.cur.execute(f"INSERT INTO Guild (id, autoclose) VALUES {insert} ON CONFLICT DO NOTHING")
+        self.conn.commit()
+        self.logger.log(level=logging.INFO, msg=f'Added guilds to database')
 
     # def update_guild(self, guild_id, **kwargs):
     #     cols = ','.join([f'{key}=%s' for key in kwargs.keys()])
@@ -73,7 +79,7 @@ class db:
         self.logger.log(level=logging.INFO, msg=f'Added user {user.id} to database')
     
     def add_users(self, users):
-        insert = ', '.join([f'({u.id})' for u in users])
+        insert = ', '.join([f'({u})' for u in users])
         self.cur.execute(f'INSERT INTO Discord_User VALUES {insert} ON CONFLICT DO NOTHING')
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added users to database')
@@ -94,12 +100,17 @@ class db:
 
 # Role functions
 
-    # def add_role(self, role):
-    #     self.cur.execute(
-    #         'INSERT OR IGNORE INTO Discord_Role VALUES (%s, %s) ON CONFLICT DO NOTHING', (role.id, role.guild.id))
-    #     self.conn.commit()
-    #     self.logger.log(level=logging.INFO,
-    #                     msg=f'Added role {role.id} to database')
+    def add_role(self, role):
+        self.cur.execute('INSERT INTO Discord_Role VALUES (%s, %s) ON CONFLICT DO NOTHING', (role.id, role.guild.id))
+        self.conn.commit()
+        self.logger.log(level=logging.INFO, msg=f'Added role {role.id} to database')
+
+    def add_roles(self, roles):
+        insert = ', '.join([f'({r.id}, {r.guild.id})' for r in roles])
+        self.cur.execute(f'INSERT INTO Discord_Role VALUES {insert} ON CONFLICT DO NOTHING')
+        self.conn.commit()
+        self.logger.log(level=logging.INFO, msg=f'Added roles to database')
+
 
     # def get_role(self, role_id):
     #     self.cur.execute(
