@@ -21,7 +21,7 @@ print(tex)
 # \end{proof}"""
 
 preview(tex, viewer='file', filename='tex.png', preamble=preamble, dvioptions=["-T", "tight", "-D 500", "-bg", "Transparent"])
-x, y = symbols("x,y")
-preview(x + y, outputTexFile="sample.tex")
+# x, y = symbols("x,y")
+# preview(x + y, outputTexFile="sample.tex")
 
         

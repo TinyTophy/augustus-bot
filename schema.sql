@@ -5,7 +5,7 @@
 
 
 CREATE TABLE IF NOT EXISTS Guild (
-	id INTEGER PRIMARY KEY,
+	id BIGINT PRIMARY KEY,
 	muterole_id	INTEGER,
 	modrole_id INTEGER,
 	log_id INTEGER,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS Guild (
 	modmail_id INTEGER,
 	verify_role_id INTEGER,
 	verify_log_id INTEGER,
-	autoclose_votes BOOLEAN
+	autoclose BOOLEAN
 );
 CREATE TABLE IF NOT EXISTS Prefix (
 	id SERIAL PRIMARY KEY,
@@ -22,13 +22,20 @@ CREATE TABLE IF NOT EXISTS Prefix (
 CREATE TABLE IF NOT EXISTS Guild_Prefix (
 	id SERIAL PRIMARY KEY,
 	prefix_id INTEGER NOT NULL,
-	guild_id INTEGER NOT NULL,
+	guild_id BIGINT NOT NULL,
 	FOREIGN KEY(prefix_id) REFERENCES Prefix(id),
 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
 );
--- CREATE TABLE IF NOT EXISTS Member (
--- 	id INTEGER PRIMARY KEY
--- );
+CREATE TABLE IF NOT EXISTS Discord_User (
+	id BIGINT PRIMARY KEY
+);
+CREATE TABLE IF NOT EXISTS Member (
+	id SERIAL PRIMARY KEY,
+	guild_id BIGINT NOT NULL,
+	member_id BIGINT NOT NULL,
+	FOREIGN KEY(guild_id) REFERENCES Guild(id),
+	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
+);
 -- CREATE TABLE IF NOT EXISTS Discord_Role (
 -- 	role_id	INTEGER PRIMARY KEY,
 -- 	guild_id INTEGER NOT NULL
@@ -40,13 +47,7 @@ CREATE TABLE IF NOT EXISTS Guild_Prefix (
 -- 	FOREIGN KEY(role_id) REFERENCES Discord_Role(role_id),
 -- 	FOREIGN KEY(member_id) REFERENCES Member(id)
 -- );
--- CREATE TABLE IF NOT EXISTS Guild_Member (
--- 	id SERIAL PRIMARY KEY,
--- 	guild_id INTEGER NOT NULL,
--- 	member_id INTEGER NOT NULL,
--- 	FOREIGN KEY(guild_id) REFERENCES Guild(id),
--- 	FOREIGN KEY(member_id) REFERENCES Member(id)
--- );
+
 -- CREATE TABLE IF NOT EXISTS Modlog_Entry (
 -- 	id SERIAL PRIMARY KEY,
 -- 	case_id INTEGER NOT NULL,
