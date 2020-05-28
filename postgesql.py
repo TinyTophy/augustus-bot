@@ -60,7 +60,6 @@ class db:
 
     def add_prefix(self, guild_id, prefix):
         self.cur.execute('INSERT OR IGNORE INTO Prefix VALUES (%s)', [prefix])
-        self.cur.execute('INSERT OR IGNORE INTO Guild_Prefix VALUES (%s)', [])
 
     def get_guild_prefixes(self, guild_id):
         self.cur.execute('SELECT prefix FROM Prefix INNER JOIN Guild_Prefix ON Prefix.id=Guild_Prefix.prefix_id')
@@ -72,6 +71,12 @@ class db:
         self.cur.execute('INSERT INTO Discord_User VALUES (%s) ON CONFLICT DO NOTHING', [user.id])
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added user {user.id} to database')
+    
+    def add_users(self, users):
+        insert = ', '.join([f'({u.id})' for u in users])
+        self.cur.execute(f'INSERT INTO Discord_User VALUES {insert} ON CONFLICT DO NOTHING')
+        self.conn.commit()
+        self.logger.log(level=logging.INFO, msg=f'Added users to database')
     
     # def get_member(self, member_id):
     #     self.cur.execute(
@@ -176,23 +181,26 @@ class db:
 
 # Helper Functions
 
-    def add_guild_member(self, guild_id, member_id):
-        self.cur.execute(
-            'INSERT OR IGNORE INTO Guild_Member (guild_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', (guild_id, member_id))
+    def add_member(self, guild_id, user_id):
+        self.cur.execute('INSERT INTO Member (guild_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', [guild_id, user_id])
         self.conn.commit()
 
-    def add_member_role(self, member_id, role_id):
-        self.cur.execute(
-            'INSERT OR IGNORE INTO Member_Role (role_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', (role_id, member_id))
+    def add_guild_prefix(self, guild_id, prefix_id):
+        self.cur.execute('INSERT OR IGNORE INTO Guild_Prefix (prefix_id, guild_id) VALUES (%s, %s)', [prefix_id, guild_id])
         self.conn.commit()
 
-    def remove_guild_member(self, guild_id, member_id):
-        self.cur.execute(
-            'DELETE FROM Guild_Member WHERE guild_id=%s AND member_id=%s)', (guild_id, member_id))
-        self.conn.commit()
+    # def add_member_role(self, member_id, role_id):
+    #     self.cur.execute(
+    #         'INSERT OR IGNORE INTO Member_Role (role_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', (role_id, member_id))
+    #     self.conn.commit()
 
-    def remove_member_role(self, member_id, role_id):
-        self.cur.execute(
-            'DELETE FROM Member_Role WHERE role_id=%s AND member_id=%s', (role_id, member_id))
-        self.conn.commit()
+    # def remove_guild_member(self, guild_id, member_id):
+    #     self.cur.execute(
+    #         'DELETE FROM Guild_Member WHERE guild_id=%s AND member_id=%s)', (guild_id, member_id))
+    #     self.conn.commit()
+
+    # def remove_member_role(self, member_id, role_id):
+    #     self.cur.execute(
+    #         'DELETE FROM Member_Role WHERE role_id=%s AND member_id=%s', (role_id, member_id))
+    #     self.conn.commit()
 

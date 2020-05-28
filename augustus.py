@@ -35,7 +35,6 @@ class Augustus(commands.Bot):
         await self.change_presence(activity=discord.Game(name='!help'))
         for g in self.guilds:
             self.db.add_guild(g)
-            for m in g.members:
-                self.db.add_user(m)
+            self.db.add_users(g.members)
         print(f'Logged in as {self.user}')
         print('-----------------------')
