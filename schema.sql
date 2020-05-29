@@ -37,17 +37,17 @@ CREATE TABLE IF NOT EXISTS Member (
 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
 );
 CREATE TABLE IF NOT EXISTS Discord_Role (
-	role_id	BIGINT PRIMARY KEY,
+	id	BIGINT PRIMARY KEY,
 	guild_id BIGINT NOT NULL,
 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
 );
--- CREATE TABLE IF NOT EXISTS Member_Role (
--- 	id SERIAL PRIMARY KEY,
--- 	role_id INTEGER NOT NULL,
--- 	member_id INTEGER NOT NULL,
--- 	FOREIGN KEY(role_id) REFERENCES Discord_Role(role_id),
--- 	FOREIGN KEY(member_id) REFERENCES Member(id)
--- );
+CREATE TABLE IF NOT EXISTS Member_Role (
+	id SERIAL PRIMARY KEY,
+	role_id INTEGER NOT NULL,
+	member_id INTEGER NOT NULL,
+	FOREIGN KEY(role_id) REFERENCES Discord_Role(id),
+	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
+);
 
 -- CREATE TABLE IF NOT EXISTS Modlog_Entry (
 -- 	id SERIAL PRIMARY KEY,

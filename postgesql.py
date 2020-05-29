@@ -200,6 +200,12 @@ class db:
         self.cur.execute('INSERT OR IGNORE INTO Guild_Prefix (prefix_id, guild_id) VALUES (%s, %s)', [prefix_id, guild_id])
         self.conn.commit()
 
+    def add_member_roles(self, roles):
+        insert = ', '.join([f'({r.id}, {m.id})' for r in roles for m in r.members])
+        self.cur.execute(f'INSERT INTO Member_Role (role_id, member_id) VALUES {insert} ON CONFLICT DO NOTHING')
+        self.conn.commit()
+        self.logger.log(level=logging.INFO, msg=f'Added roles to database')
+
     # def add_member_role(self, member_id, role_id):
     #     self.cur.execute(
     #         'INSERT OR IGNORE INTO Member_Role (role_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', (role_id, member_id))
