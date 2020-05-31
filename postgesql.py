@@ -197,7 +197,7 @@ class db:
         self.conn.commit()
 
     def add_guild_prefix(self, guild_id, prefix_id):
-        self.cur.execute('INSERT OR IGNORE INTO Guild_Prefix (prefix_id, guild_id) VALUES (%s, %s)', [prefix_id, guild_id])
+        self.cur.execute('INSERT OR Guild_Prefix (prefix_id, guild_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', [prefix_id, guild_id])
         self.conn.commit()
 
     def add_member_roles(self, roles):

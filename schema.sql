@@ -43,8 +43,8 @@ CREATE TABLE IF NOT EXISTS Discord_Role (
 );
 CREATE TABLE IF NOT EXISTS Member_Role (
 	id SERIAL PRIMARY KEY,
-	role_id INTEGER NOT NULL,
-	member_id INTEGER NOT NULL,
+	role_id BIGINT NOT NULL,
+	member_id BIGINT NOT NULL,
 	FOREIGN KEY(role_id) REFERENCES Discord_Role(id),
 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
 );
