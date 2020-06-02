@@ -213,7 +213,7 @@ class Misc(commands.Cog):
             last = soup.body.find(text=re.compile('Last updated')).replace('Last updated:', '').strip()
             lastdate = datetime.strptime(last, '%B %d, %Y, %H:%M GMT')
             results = soup.body.find_all(id='maincounter-wrap')
-            items = [r.span.contents[0].strip() for r in results]
+            items = [r.span.contents[0].strip() for r in results if r.span]
             img = soup.body.find(src=re.compile('/img/flags/small/'))
             name = img.parent.next_sibling.strip()
             img = str(img)[str(img).index('src'):str(img).index('.gif')].strip('src="')

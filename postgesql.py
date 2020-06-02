@@ -65,11 +65,13 @@ class db:
 # Prefix functions
 
     def add_prefix(self, guild_id, prefix):
-        self.cur.execute('INSERT OR IGNORE INTO Prefix VALUES (%s)', [prefix])
+        # self.cur.execute('INSERT INTO Prefix VALUES (%s) ON CONFLICT DO NOTHING', [prefix])
+        self.cur.execute('INSERT INTO Prefix (prefix, guild_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', [prefix, guild_id])
+        self.conn.commit()
 
     def get_guild_prefixes(self, guild_id):
-        self.cur.execute('SELECT prefix FROM Prefix INNER JOIN Guild_Prefix ON Prefix.id=Guild_Prefix.prefix_id')
-        return dict(self.cur.fetchone())
+        self.cur.execute('SELECT prefix from Prefix WHERE guild_id=(%s)', [guild_id])
+        return [p for ptuple in self.cur.fetchall() for p in ptuple]
 
 # User functions
 
@@ -79,8 +81,10 @@ class db:
         self.logger.log(level=logging.INFO, msg=f'Added user {user.id} to database')
     
     def add_users(self, users):
-        insert = ', '.join([f'({u})' for u in users])
-        self.cur.execute(f'INSERT INTO Discord_User VALUES {insert} ON CONFLICT DO NOTHING')
+        insert = ', '.join([f'({u.id})' for u in users])
+        self.cur.execute(f'INSERT INTO Discord_User VALUES {insert} ON CONFLICT DO NOTHING RETURNING id')
+        helper = ', '.join([f'({u.guild.id},{u.id})' for u in users])
+        self.cur.execute(f'INSERT INTO Member (guild_id, member_id) VALUES {helper} ON CONFLICT DO NOTHING')   
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added users to database')
     
@@ -101,13 +105,15 @@ class db:
 # Role functions
 
     def add_role(self, role):
-        self.cur.execute('INSERT INTO Discord_Role VALUES (%s, %s) ON CONFLICT DO NOTHING', (role.id, role.guild.id))
+        self.cur.execute('INSERT INTO Guild_Role VALUES (%s, %s) ON CONFLICT DO NOTHING', (role.id, role.guild.id))
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added role {role.id} to database')
 
     def add_roles(self, roles):
         insert = ', '.join([f'({r.id}, {r.guild.id})' for r in roles])
-        self.cur.execute(f'INSERT INTO Discord_Role VALUES {insert} ON CONFLICT DO NOTHING')
+        self.cur.execute(f'INSERT INTO Guild_Role VALUES {insert} ON CONFLICT DO NOTHING')
+        insert = ', '.join([f'({r.id}, {m.id})' for r in roles for m in r.members])
+        self.cur.execute(f'INSERT INTO Member_Role (role_id, member_id) VALUES {insert} ON CONFLICT DO NOTHING')
         self.conn.commit()
         self.logger.log(level=logging.INFO, msg=f'Added roles to database')
 
@@ -190,21 +196,6 @@ class db:
     # def get_rrs_by_msg(self, msg_id):
     #     return [dict(record) for record in self.cur.execute('SELECT * FROM Reaction_Role WHERE message_id=%s', (msg_id,))]    
 
-# Helper Functions
-
-    def add_member(self, guild_id, user_id):
-        self.cur.execute('INSERT INTO Member (guild_id, member_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', [guild_id, user_id])
-        self.conn.commit()
-
-    def add_guild_prefix(self, guild_id, prefix_id):
-        self.cur.execute('INSERT OR Guild_Prefix (prefix_id, guild_id) VALUES (%s, %s) ON CONFLICT DO NOTHING', [prefix_id, guild_id])
-        self.conn.commit()
-
-    def add_member_roles(self, roles):
-        insert = ', '.join([f'({r.id}, {m.id})' for r in roles for m in r.members])
-        self.cur.execute(f'INSERT INTO Member_Role (role_id, member_id) VALUES {insert} ON CONFLICT DO NOTHING')
-        self.conn.commit()
-        self.logger.log(level=logging.INFO, msg=f'Added roles to database')
 
     # def add_member_role(self, member_id, role_id):
     #     self.cur.execute(

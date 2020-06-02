@@ -17,13 +17,8 @@ CREATE TABLE IF NOT EXISTS Guild (
 );
 CREATE TABLE IF NOT EXISTS Prefix (
 	id SERIAL PRIMARY KEY,
-	prefix VARCHAR(5)
-);
-CREATE TABLE IF NOT EXISTS Guild_Prefix (
-	id SERIAL PRIMARY KEY,
-	prefix_id INTEGER NOT NULL,
+	prefix VARCHAR(5) NOT NULL,
 	guild_id BIGINT NOT NULL,
-	FOREIGN KEY(prefix_id) REFERENCES Prefix(id),
 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
 );
 CREATE TABLE IF NOT EXISTS Discord_User (
@@ -36,7 +31,7 @@ CREATE TABLE IF NOT EXISTS Member (
 	FOREIGN KEY(guild_id) REFERENCES Guild(id),
 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
 );
-CREATE TABLE IF NOT EXISTS Discord_Role (
+CREATE TABLE IF NOT EXISTS Guild_Role (
 	id	BIGINT PRIMARY KEY,
 	guild_id BIGINT NOT NULL,
 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
@@ -45,7 +40,7 @@ CREATE TABLE IF NOT EXISTS Member_Role (
 	id SERIAL PRIMARY KEY,
 	role_id BIGINT NOT NULL,
 	member_id BIGINT NOT NULL,
-	FOREIGN KEY(role_id) REFERENCES Discord_Role(id),
+	FOREIGN KEY(role_id) REFERENCES Guild_Role(id),
 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
 );
 
