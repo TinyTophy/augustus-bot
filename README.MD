@@ -1,4 +1,4 @@
-#Setup
+# Setup
 
 1. `sudo apt-get install libpq-dev`
 
