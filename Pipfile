@@ -11,6 +11,7 @@ bs4 = "*"
 pytz = "*"
 python-dateutil = "*"
 sympy = "*"
+requests = "*"
 
 [dev-packages]
 pylint = "*"
