@@ -16,6 +16,7 @@ class Vote(commands.Cog):
         self.vote_check.start()
 
 # Listeners
+
     # Loop every 20 seconds
     @tasks.loop(seconds=20.0)
     async def vote_check(self):

@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-psycopg2 = "*"
 discord = "*"
 humanize = "*"
 bs4 = "*"
@@ -12,6 +11,9 @@ pytz = "*"
 python-dateutil = "*"
 sympy = "*"
 requests = "*"
+pymongo = "*"
+dnspython = "*"
+discord-flags = "*"
 
 [dev-packages]
 pylint = "*"
