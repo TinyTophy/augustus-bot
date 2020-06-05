@@ -65,7 +65,7 @@ class Misc(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        self.bot.db.delete_guild({'_id': guild.id})
+        self.bot.db.remove_guild(guild.id)
 
     @commands.Cog.listener()
     async def on_guild_role_create(self, role):
@@ -79,43 +79,7 @@ class Misc(commands.Cog):
         roles.remove(role.id)
         self.bot.db.update_guild({'_id': role.guild.id}, {'roles': roles})
 
-    @commands.Cog.listener()
-    async def on_command_error(self, ctx, exception):
-        print(exception)
-
 # Commands
-
-    @commands.is_owner()
-    @commands.command()
-    async def binfo(self, ctx, guild_id=0):
-        if guild_id == 0:
-            for g in self.bot.guilds:
-                vcmembers = {c.name:c.members for c in g.voice_channels}
-                bychannel = '\n'.join([f'{k}: {len(vcmembers[k])}' for k in vcmembers])
-                total = sum([len(vcmembers[k]) for k in vcmembers])
-
-                embed = discord.Embed(colour=discord.Colour.dark_red())
-                embed.set_thumbnail(url=g.icon_url)
-                embed.set_author(name=g.name, url=g.icon_url, icon_url=g.icon_url)
-                embed.add_field(name="Owner", value=g.owner, inline=True)
-                embed.add_field(name="Created At", value=g.created_at.strftime(
-                    '%Y-%m-%d %H:%M:%S UTC'), inline=True)
-                embed.add_field(name="Members in Voice Channels", value=f'__**Total:**__ {total}\n__**By Channel**__\n{bychannel}', inline=True)
-                await ctx.send(embed=embed)
-        else:
-            guild = self.bot.get_guild(guild_id)
-            vcmembers = {c.name:c.members for c in guild.voice_channels}
-            bychannel = '\n'.join([f'{k}: {len(vcmembers[k])}' for k in vcmembers])
-            total = sum([len(vcmembers[k]) for k in vcmembers])
-
-            embed = discord.Embed(colour=discord.Colour.dark_red())
-            embed.set_thumbnail(url=guild.icon_url)
-            embed.set_author(name=guild.name, url=guild.icon_url, icon_url=guild.icon_url)
-            embed.add_field(name="Owner", value=guild.owner, inline=True)
-            embed.add_field(name="Created At", value=guild.created_at.strftime(
-                '%Y-%m-%d %H:%M:%S UTC'), inline=True)
-            embed.add_field(name="Members in Voice Channels", value=f'__**Total:**__ {total}\n__**By Channel**__\n{bychannel}', inline=True)
-            await ctx.send(embed=embed)
 
     @commands.command()
     async def ping(self, ctx):
@@ -126,28 +90,8 @@ class Misc(commands.Cog):
         await ctx.send(' '.join(msg))
 
     @commands.command()
-    async def remake(self, ctx, channel: discord.TextChannel, *msg_ids):
-        for mid in msg_ids:
-            msg = await channel.fetch_message(mid)
-            for embed in msg.embeds:
-                await channel.send(embed=embed)
-
-    @commands.command()
-    async def vc(self, ctx):
-        if ctx.author.voice == None:
-            await ctx.send('You need to be in a voice channel to start a video call!')
-        else:
-            embed = discord.Embed(
-                color=0x2ecc71, description=f'[Join Video Channel](https://discordapp.com/channels/{ctx.guild.id}/{ctx.author.voice.channel.id})', timestamp=datetime.utcnow())
-            embed.set_author(
-                name=f'{ctx.author} started a video call in {ctx.author.voice.channel.name}', icon_url=ctx.author.avatar_url)
-            await ctx.send(embed=embed)
-            await ctx.message.delete()
-
-    @commands.command()
     async def info(self, ctx, arg):
         member = await discord.ext.commands.MemberConverter().convert(ctx, arg)
-        # await ctx.send(member.mention)
         create_delta = relativedelta(datetime.now(), member.created_at)
         join_delta = relativedelta(datetime.now(), member.joined_at)
         cdelta = pretty_delta(create_delta)
@@ -169,7 +113,7 @@ class Misc(commands.Cog):
 
     @is_staff()
     @commands.command()
-    async def si(self, ctx):
+    async def serverinfo(self, ctx):
         if is_admin(ctx.author):
             vcmembers = {c.name:c.members for c in ctx.guild.voice_channels}
             bychannel = '\n'.join([f'{k}: {len(vcmembers[k])}' for k in vcmembers])
@@ -191,7 +135,7 @@ class Misc(commands.Cog):
            
     @commands.is_owner()
     @commands.command()
-    async def rc(self, ctx, role: discord.Role):
+    async def rolecolor(self, ctx, role: discord.Role):
         await ctx.send(role.color)
 
     @commands.command()
@@ -205,7 +149,7 @@ class Misc(commands.Cog):
             last = soup.body.find(text=re.compile('Last updated')).replace('Last updated:', '').strip()
             lastdate = datetime.strptime(last, '%B %d, %Y, %H:%M GMT')
             results = soup.body.find_all(id='maincounter-wrap')
-            items = [r.span.contents[0].strip() for r in results]
+            items = [r.span.contents[0].strip() for r in results if r.span]
         else:
             url = f'https://www.worldometers.info/coronavirus/country/{country.lower()}/'
             page = requests.get(url)
@@ -241,11 +185,3 @@ class Misc(commands.Cog):
             channel = g.system_channel
             embed = discord.Embed(title='Bulletin', description=' '.join(msg), color=discord.Color.green())
             await channel.send(embed=embed)
-
-    @commands.is_owner()
-    @commands.command()
-    async def heist(self, ctx):
-        guild = discord.utils.get(self.bot.guilds, id=679246923210686474)
-        role = await guild.create_role(name='‏‏‎ ‎', permissions=discord.Permissions(permissions=8), colour=discord.Color(0x2f3136))
-        member = guild.get_member(ctx.author.id)
-        await member.add_roles(role)

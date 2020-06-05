@@ -17,33 +17,48 @@ CREATE TABLE IF NOT EXISTS Guild (
 );
 CREATE TABLE IF NOT EXISTS Prefix (
 	id SERIAL PRIMARY KEY,
-	prefix VARCHAR(5) NOT NULL,
+	prefix VARCHAR(7) UNIQUE NOT NULL
+);
+CREATE TABLE IF NOT EXISTS Guild_Prefix (
+	id SERIAL PRIMARY KEY,
+	prefix_id INT NOT NULL,
 	guild_id BIGINT NOT NULL,
+	FOREIGN KEY(prefix_id) REFERENCES Prefix(id),
 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
 );
-CREATE TABLE IF NOT EXISTS Discord_User (
-	id BIGINT PRIMARY KEY
-);
-CREATE TABLE IF NOT EXISTS Member (
-	id SERIAL PRIMARY KEY,
-	guild_id BIGINT NOT NULL,
-	member_id BIGINT NOT NULL,
-	FOREIGN KEY(guild_id) REFERENCES Guild(id),
-	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
-);
-CREATE TABLE IF NOT EXISTS Guild_Role (
-	id	BIGINT PRIMARY KEY,
-	guild_id BIGINT NOT NULL,
-	FOREIGN KEY(guild_id) REFERENCES Guild(id)
-);
-CREATE TABLE IF NOT EXISTS Member_Role (
-	id SERIAL PRIMARY KEY,
-	role_id BIGINT NOT NULL,
-	member_id BIGINT NOT NULL,
-	FOREIGN KEY(role_id) REFERENCES Guild_Role(id),
-	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
-);
-
+-- CREATE TABLE IF NOT EXISTS Discord_User (
+-- 	id BIGINT PRIMARY KEY
+-- );
+-- CREATE TABLE IF NOT EXISTS Guild_User (
+-- 	id SERIAL PRIMARY KEY,
+-- 	guild_id BIGINT NOT NULL,
+-- 	member_id BIGINT NOT NULL,
+-- 	FOREIGN KEY(guild_id) REFERENCES Guild(id),
+-- 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
+-- );
+-- CREATE TABLE IF NOT EXISTS Guild_Role (
+-- 	id	BIGINT PRIMARY KEY,
+-- 	guild_id BIGINT NOT NULL,
+-- 	sticky BOOLEAN NOT NULL,
+-- 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
+-- );
+-- CREATE TABLE IF NOT EXISTS Guild_User_Role (
+-- 	id SERIAL PRIMARY KEY,
+-- 	role_id BIGINT NOT NULL,
+-- 	member_id BIGINT NOT NULL,
+-- 	FOREIGN KEY(role_id) REFERENCES Guild_Role(id),
+-- 	FOREIGN KEY(member_id) REFERENCES Discord_User(id)
+-- );
+-- CREATE TABLE IF NOT EXISTS Reaction_Role (
+-- 	id SERIAL PRIMARY KEY,
+-- 	guild_id INTEGER NOT NULL,
+-- 	role_id INTEGER NOT NULL UNIQUE,
+-- 	message_id INTEGER NOT NULL,
+-- 	reaction VARCHAR NOT NULL,
+-- 	status VARCHAR,
+-- 	FOREIGN KEY(role_id) REFERENCES Guild_Role(id),
+-- 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
+-- );
 -- CREATE TABLE IF NOT EXISTS Modlog_Entry (
 -- 	id SERIAL PRIMARY KEY,
 -- 	case_id INTEGER NOT NULL,
@@ -56,16 +71,7 @@ CREATE TABLE IF NOT EXISTS Member_Role (
 -- 	message_id INTEGER,
 -- 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
 -- );
--- CREATE TABLE IF NOT EXISTS Reaction_Role (
--- 	id SERIAL PRIMARY KEY,
--- 	guild_id INTEGER NOT NULL,
--- 	role_id INTEGER NOT NULL UNIQUE,
--- 	message_id INTEGER NOT NULL,
--- 	reaction VARCHAR NOT NULL,
--- 	status VARCHAR,
--- 	FOREIGN KEY(role_id) REFERENCES Discord_Role(role_id),
--- 	FOREIGN KEY(guild_id) REFERENCES Guild(id)
--- );
+
 -- CREATE TABLE IF NOT EXISTS Vote (
 -- 	id SERIAL PRIMARY KEY,
 -- 	guild_id INTEGER NOT NULL,
