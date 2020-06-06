@@ -6,3 +6,4 @@ postgresql.py
 test.py
 tex.png
 test.tex
+schema.sql

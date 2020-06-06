@@ -20,7 +20,7 @@ from mongodb import db
 from utils import get_prefix, load_guilds
 
 
-class Augustus(commands.Bot):
+class Tophy(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
@@ -29,9 +29,10 @@ class Augustus(commands.Bot):
         token = info['token'][token_mode()]
         super().__init__(command_prefix=get_prefix, help_command=Help())
         # self.add_cog(Mod(self))
-        self.add_cog(Misc(self))
+        # self.add_cog(Misc(self))
         # self.add_cog(Quickpoll(self))
         self.add_cog(Embed(self))
+        self.add_cog(ReactionRole(self))
         self.run(token)
 
     async def on_ready(self):
@@ -39,7 +40,7 @@ class Augustus(commands.Bot):
         print(f'Logged in as {self.user}')
         print('-----------------------')
     
-    # async def on_command_error(self, ctx, exception):
-    #     print(exception)
+    async def on_command_error(self, ctx, exception):
+        print(exception)
         
         
