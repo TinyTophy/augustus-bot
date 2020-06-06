@@ -19,14 +19,13 @@ class Embed(commands.Cog):
     @flags.add_flag("--timestamp", type=bool, default=False)
     @flags.command()
     async def embed(self, ctx, channel: discord.TextChannel, **flags):
-        print(flags)
         embed = discord.Embed(title=flags['title'])
 
         if flags['author']:
             author = list(map(str, flags['author'].split(',')))
 
             if len(author) >= 2 and author[1].lower() == 'none':
-                author[1] = discord.Embed.Empty 
+                author[1] = discord.Embed.Empty
 
             embed.set_author(name=author[0], url=author[1] if len(
                 author) >= 2 else discord.Embed.Empty, icon_url=author[2] if len(author) >= 3 else discord.Embed.Empty)
@@ -37,11 +36,26 @@ class Embed(commands.Cog):
         if flags['desc']:
             embed.description = flags['desc']
 
+        if flags['url']:
+            embed.url = flags['url']
+
+        if flags['thumbnail']:
+            embed.thumbnail = flags['thumbnail']
+
+        if flags['image']:
+            embed.image = flags['image']
+
         if flags['footer']:
-            embed.set_footer(text=flags['footer'], icon_url=ctx.guild.icon_url)
-        
+            footer = list(map(str, flags['footer'].split(',')))
+
+            if len(footer) == 2 and footer[1].lower() == 'guild':
+                footer[1] = ctx.guild.icon_url
+                
+            embed.set_footer(text=footer[0], icon_url=footer[1] if len(
+                footer) == 2 else discord.Embed.Empty)
+
         if flags['timestamp']:
             embed.timestamp = datetime.utcnow()
 
         await channel.send(embed=embed)
-        await ctx.send(f'Created embed in **{channel}**')
+        await ctx.send(f'Created embed in {channel.mention}')

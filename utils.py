@@ -6,7 +6,7 @@ import json
 
 def is_staff():
     def predicate(ctx):
-        modrole = ctx.guild.get_role(ctx.cog.db.find_guild(
+        modrole = ctx.guild.get_role(ctx.cog.bot.db.find_guild(
             {'_id': ctx.guild.id})[0]['modrole_id'])
         return modrole in ctx.author.roles or ctx.author.guild_permissions.administrator
     return commands.check(predicate)
