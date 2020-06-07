@@ -44,23 +44,28 @@ class Misc(commands.Cog):
     async def on_guild_join(self, guild):
         prefix = json.load(open('info.json'))['state']
         gdict = {
-            '_id': guild.id,
-            'prefix': [prefix, '.'],
-            'muterole_id': None,
-            'modrole_id': None,
-            'modmail_channel_id': None,
-            'modlog_channel_id': None,
-            'log_channel_id': None,
-            'verify_role_id': None,
-            'verify_log_channel_id': None,
-            'members': {str(m.id): {'verified': False, 'roles': [r.id for r in m.roles]} for m in guild.members},
-            'roles': [r.id for r in guild.roles],
-            'sticky_roles': [],
-            'reaction_roles': {},
-            'blacklist': [],
-            'modlog_entries': [],
-            'votes': []
-        }
+                '_id': guild.id,
+                'prefix': [prefix, '.'],
+                'muterole_id': None,
+                'modrole_id': None,
+                'modmail_channel_id': None,
+                'modlog_channel_id': None,
+                'log_channel_id': None,
+                'verify_role_id': None,
+                'verify_log_channel_id': None,
+                'autoclose_votes': False,
+                'warn_mute_limit': None,
+                'warn_kick_limit': None,
+                'warn_ban_limit': None,
+                'members': {str(m.id): {'verified': False, 'roles': [r.id for r in m.roles], 'quotes': [], 'warns': 0} for m in guild.members},
+                'roles': [r.id for r in guild.roles],
+                'sticky_roles': [],
+                'autoroles': [],
+                'reaction_roles': {},
+                'blacklist': [],
+                'modlog_entries': [],
+                'votes': []
+            }
         self.bot.db.add_guild(gdict)
 
     @commands.Cog.listener()
