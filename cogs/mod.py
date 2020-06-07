@@ -174,7 +174,7 @@ class Mod(commands.Cog):
         if is_admin(ctx.author):
             if role in ctx.guild.roles:
                 if role.name == '@everyone':
-                    await ctx.send('You cannot make everyone a mod!')
+                    await ctx.send('You cannot make @everyone the muterole!')
                 else:
                     for tc in ctx.guild.text_channels:
                         await tc.set_permissions(role, send_messages=False)

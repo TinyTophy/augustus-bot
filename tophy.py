@@ -11,6 +11,7 @@ from cogs.log import Log
 from cogs.misc import Misc
 from cogs.mod import Mod
 from cogs.modlog import ModLog
+from cogs.modmail import Modmail
 from cogs.quickpoll import Quickpoll
 from cogs.quotes import Quotes
 from cogs.reactionrole import ReactionRole
@@ -28,6 +29,7 @@ class Tophy(commands.Bot):
         info = json.load(open('info.json'))
         token = info['token'][token_mode()]
         super().__init__(command_prefix=get_prefix, help_command=Help())
+        self.add_cog(Modmail(self))
         self.add_cog(ModLog(self))
         self.add_cog(Mod(self))
         self.add_cog(Misc(self))
@@ -43,5 +45,3 @@ class Tophy(commands.Bot):
         print(f'Logged in as {self.user}')
         print('-----------------------')
     
-        
-        

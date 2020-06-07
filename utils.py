@@ -52,10 +52,10 @@ def load_guilds(db, guilds):
             db.add_guild(gdict)
 
 def get_prefix(bot, message):
-    try:
+    if type(message.channel) == discord.TextChannel:
         return bot.db.find_guild({'_id': message.guild.id})[0]['prefix']
-    except Exception as e:
-        print(e)
+    else:
+        return ['!']
 
 def pretty_delta(delta):
     pdelta = {}

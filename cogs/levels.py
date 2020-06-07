@@ -9,7 +9,7 @@ class Levels(commands.Cog):
         self.db = db
 
     @commands.Cog.listener()
-    async def on_typing(self, channel, user, when):
+    async def on_message(self, message):
         pass
 
     @commands.command()
