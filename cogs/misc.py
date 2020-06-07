@@ -177,11 +177,3 @@ class Misc(commands.Cog):
     async def leave(self, ctx, guild_id):
         guild = discord.utils.get(self.bot.guilds, id=guild_id)
         await guild.leave()
-
-    @commands.is_owner()
-    @commands.command()
-    async def bulletin(self, ctx, *msg):
-        for g in self.bot.guilds:
-            channel = g.system_channel
-            embed = discord.Embed(title='Bulletin', description=' '.join(msg), color=discord.Color.green())
-            await channel.send(embed=embed)
