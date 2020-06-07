@@ -47,8 +47,7 @@ class Mod(commands.Cog):
     @commands.command()
     async def purge(self, ctx, amount=10):
         deleted = await ctx.channel.purge(limit=amount+1)
-        await ctx.send(f'Deleted **{deleted}** messages.', delete_after=3)
-
+        await ctx.send(f'Deleted **{len(deleted)-1}** messages.', delete_after=5)
 
     @commands.command()
     async def blacklist(self, ctx, user_id):
@@ -84,6 +83,39 @@ class Mod(commands.Cog):
             self.bot.db.update_guild({'_id': ctx.guild.id}, dbguild)
         else:
             await ctx.send(f'You lack the permissions to mute **{member}**!')
+    
+    @is_staff()
+    @commands.command()
+    async def warn(self, ctx, member: discord.Member, reason):
+        modrole = ctx.guild.get_role(self.bot.db.find_guild({'_id': ctx.guild.id})[0]['modrole_id'])
+        if not modrole:
+            await ctx.send('No modrole is set. Use the `modrole` command to set one.')
+        elif not_staff(modrole, member) or is_admin(ctx.author):
+            dbguild = self.bot.db.find_guild({'_id': ctx.guild.id})[0]
+            members = dbguild['members']
+            members[str(member.id)]['warns']+=1
+            self.bot.db.update_guild({'_id': ctx.guild.id}, {'members': members})
+            
+            mlchannel = ctx.guild.get_channel(dbguild['modlog_channel_id'])
+            case = len(dbguild['modlog_entries']) + 1
+
+            embed = discord.Embed(color=discord.Color(
+                0xe9ce62), title=f'warn | case {case}', timestamp=datetime.utcnow())
+            embed.add_field(name="Offender", value=f'{member}\n{member.mention}\n{member.id}')
+            embed.add_field(name="Responsible Moderator", value=f'{ctx.author}\n{ctx.author.mention}\n{ctx.author.id}')
+            embed.add_field(name="Reason", value=reason)
+            msg = await mlchannel.send(embed=embed)
+            dbguild['modlog_entries'].append(msg.id)
+            self.bot.db.update_guild({'_id': ctx.guild.id}, dbguild)
+            await ctx.send(f'**{member}** has been warned for {reason}!')
+        else:
+            await ctx.send(f'You lack the permissions to warn **{member}**!')
+
+    # @commands.command()
+    # async def warnlimit(self, ctx, punish, limit):
+    #     if punish == 'mute':
+
+    #     await ctx.send(f'I will now **{punish}** members after **{limit}** warnings.')
 
     @is_staff()
     @commands.command()
