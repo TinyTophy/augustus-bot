@@ -57,14 +57,24 @@ class Misc(commands.Cog):
                 'warn_mute_limit': None,
                 'warn_kick_limit': None,
                 'warn_ban_limit': None,
-                'members': {str(m.id): {'verified': False, 'roles': [r.id for r in m.roles], 'quotes': [], 'warns': 0} for m in guild.members},
+                'msg_xp': 5,
+                'members': {
+                    str(m.id): {
+                        'verified': False, 
+                        'roles': [r.id for r in m.roles], 
+                        'quotes': [], 
+                        'warns': 0, 
+                        'xp': 0
+                    } for m in guild.members
+                },
                 'roles': [r.id for r in guild.roles],
                 'sticky_roles': [],
                 'autoroles': [],
                 'reaction_roles': {},
                 'blacklist': [],
                 'modlog_entries': [],
-                'votes': []
+                'votes': [],
+                'ranks': {}
             }
         self.bot.db.add_guild(gdict)
 

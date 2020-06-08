@@ -15,7 +15,9 @@ from cogs.modmail import Modmail
 from cogs.quickpoll import Quickpoll
 from cogs.quotes import Quotes
 from cogs.reactionrole import ReactionRole
+from cogs.levels import Levels
 from cogs.vote import Vote
+from cogs.music import Music
 from mode import token_mode
 from mongodb import db
 from utils import get_prefix, load_guilds
@@ -37,6 +39,8 @@ class Tophy(commands.Bot):
         self.add_cog(Quotes(self))
         self.add_cog(Embed(self))
         self.add_cog(ReactionRole(self))
+        self.add_cog(Levels(self))
+        self.add_cog(Music(self))
         self.run(token)
 
     async def on_ready(self):

@@ -22,7 +22,6 @@ def is_muted(member, muterole):
 
 def load_guilds(db, guilds):
     prefix = json.load(open('info.json'))['state']
-
     for guild in guilds:
         if not list(db.find_guild({'_id': guild.id})):
             gdict = {
@@ -39,16 +38,25 @@ def load_guilds(db, guilds):
                 'warn_mute_limit': None,
                 'warn_kick_limit': None,
                 'warn_ban_limit': None,
-                'members': {str(m.id): {'verified': False, 'roles': [r.id for r in m.roles], 'quotes': [], 'warns': 0} for m in guild.members},
+                'msg_xp': 5,
+                'members': {
+                    str(m.id): {
+                        'verified': False, 
+                        'roles': [r.id for r in m.roles], 
+                        'quotes': [], 
+                        'warns': 0, 
+                        'xp': 0
+                    } for m in guild.members
+                },
                 'roles': [r.id for r in guild.roles],
                 'sticky_roles': [],
                 'autoroles': [],
                 'reaction_roles': {},
                 'blacklist': [],
                 'modlog_entries': [],
-                'votes': []
+                'votes': [],
+                'ranks': {}
             }
-
             db.add_guild(gdict)
 
 def get_prefix(bot, message):
