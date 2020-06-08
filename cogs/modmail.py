@@ -16,6 +16,8 @@ class Modmail(commands.Cog):
         # If the message is in a dm channel and the author isn't the bot
         if type(message.channel) == discord.DMChannel and message.author != self.bot.user:
             
+            # If the message is only digits return (this prevents the function
+            # from being called again when the user replies with the guild ID)
             match = re.match('^[0-9]+$', message.content)
             if match:
                 return
