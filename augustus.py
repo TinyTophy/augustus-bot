@@ -23,7 +23,7 @@ from mongodb import db
 from utils import get_prefix, load_guilds
 
 
-class Tophy(commands.Bot):
+class Augustus(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)

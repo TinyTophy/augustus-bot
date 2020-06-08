@@ -15,4 +15,4 @@ class Music(commands.Cog):
             return
         
         vc_client = await channel.connect(timeout=60, reconnect=False)
-        vc_client.play(discord.FFmpegAudio(link))
+        # vc_client.play(discord.FFmpegAudio(link))
