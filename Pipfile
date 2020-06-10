@@ -15,6 +15,7 @@ pymongo = "*"
 dnspython = "*"
 discord-flags = "*"
 pynacl = "*"
+youtube-dl = "*"
 
 [dev-packages]
 pylint = "*"

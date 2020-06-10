@@ -1,5 +1,5 @@
-from tophy import Tophy
+from augustus import Augustus
 
 
 if __name__ == "__main__":
-    Tophy()
+    Augustus()

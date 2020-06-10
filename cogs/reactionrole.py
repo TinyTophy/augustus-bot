@@ -90,9 +90,7 @@ class ReactionRole(commands.Cog):
 
             for r in rrs:
                 role = discord.utils.get(ctx.guild.roles, name=rrs[r])
-                rr = {r: role.id}
-                self.bot.db.add_reaction_role(
-                    {'_id': ctx.guild.id}, msg.id, rr)
+                self.bot.db.add_reaction_role(ctx.guild.id, msg.id, {r: role.id})
                 await msg.add_reaction(r)
 
             await ctx.send(f'Added reaction roles for **{args[1]}**')
@@ -105,10 +103,9 @@ class ReactionRole(commands.Cog):
             update = self.bot.db.find_guild({'_id': ctx.guild.id})[
                 0]['reaction_roles']
             del update[str(args[0])]
-            self.bot.db.update_guild({'_id': ctx.guild.id}, {
-                'reaction_roles': update})
+            self.bot.db.update_guild(ctx.guild.id, {'reaction_roles': update})
             await ctx.send(f'Cleared reaction roles for **{args[0]}**')
 
         if arg in ['unique', 'verify', 'normal']:
-            self.bot.db.update_rr_type({'_id': ctx.guild.id}, args[0], arg)
+            self.bot.db.update_rr_type(ctx.guild.id, args[0], arg)
             await ctx.send(f'Set message **{args[0]}** to {arg}')

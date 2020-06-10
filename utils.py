@@ -20,40 +20,9 @@ def is_admin(member):
 def is_muted(member, muterole):
     return muterole in member.roles
 
-def load_guilds(db, guilds):
-    prefix = json.load(open('info.json'))['state']
-
-    for guild in guilds:
-        if not list(db.find_guild({'_id': guild.id})):
-            gdict = {
-                '_id': guild.id,
-                'prefix': [prefix, '.'],
-                'muterole_id': None,
-                'modrole_id': None,
-                'modmail_channel_id': None,
-                'modlog_channel_id': None,
-                'log_channel_id': None,
-                'verify_role_id': None,
-                'verify_log_channel_id': None,
-                'autoclose_votes': False,
-                'warn_mute_limit': None,
-                'warn_kick_limit': None,
-                'warn_ban_limit': None,
-                'members': {str(m.id): {'verified': False, 'roles': [r.id for r in m.roles], 'quotes': [], 'warns': 0} for m in guild.members},
-                'roles': [r.id for r in guild.roles],
-                'sticky_roles': [],
-                'autoroles': [],
-                'reaction_roles': {},
-                'blacklist': [],
-                'modlog_entries': [],
-                'votes': []
-            }
-
-            db.add_guild(gdict)
-
 def get_prefix(bot, message):
     if type(message.channel) == discord.TextChannel:
-        return bot.db.find_guild({'_id': message.guild.id})[0]['prefix']
+        return bot.db.find_guild(message.guild.id)[0]['prefix']
     else:
         return ['!']
 
