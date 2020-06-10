@@ -14,7 +14,7 @@ class Modmail(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message):
         # If the message is in a dm channel and the author isn't the bot
-        if type(message.channel) == discord.DMChannel and message.author != self.bot.user:
+        if type(message.channel) == discord.DMChannel and message.author.bot:
             
             # If the message is only digits return (this prevents the function
             # from being called again when the user replies with the guild ID)
