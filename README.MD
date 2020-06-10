@@ -1,10 +1,12 @@
 # Setup
 
-1. `sudo apt-get install libpq-dev`
+1. `pip3 install pipenv`
 
-2. `pip3 install pipenv`
+2. `pipenv shell`
 
-3. `pipenv shell`
+3. `pipenv install`
 
-4. `pipenv install`
+## Run
+
+While in pipenv shell run `python init.py`
 
