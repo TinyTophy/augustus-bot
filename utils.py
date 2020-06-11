@@ -6,8 +6,7 @@ import json
 
 def is_staff():
     def predicate(ctx):
-        modrole = ctx.guild.get_role(ctx.cog.bot.db.find_guild(
-            {'_id': ctx.guild.id})[0]['modrole_id'])
+        modrole = ctx.guild.get_role(ctx.cog.bot.db.find_guild(ctx.guild.id)['modrole_id'])
         return modrole in ctx.author.roles or ctx.author.guild_permissions.administrator
     return commands.check(predicate)
 
@@ -22,7 +21,7 @@ def is_muted(member, muterole):
 
 def get_prefix(bot, message):
     if type(message.channel) == discord.TextChannel:
-        return bot.db.find_guild(message.guild.id)[0]['prefix']
+        return bot.db.find_guild(message.guild.id)['prefix']
     else:
         return ['!']
 
