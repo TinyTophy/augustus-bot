@@ -109,7 +109,7 @@ class db:
         self.logger.log(level=logging.INFO, msg=f'Updated reaction role type for {msg_id} in database')
 
     def find_guild(self, guild_id: int) -> list:
-        return list(self.guilds.find({'_id': guild_id}))
+        return list(self.guilds.find({'_id': guild_id}))[0]
 
     def find_guild_member(self, guild_id: int, member_id: int) -> dict:
         members = self.guilds.find({'_id': guild_id})[0]['members']
