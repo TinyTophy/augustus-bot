@@ -140,11 +140,14 @@ class db:
     def add_users(self, users: list) -> None:
         user_ids = [u['_id'] for u in self.users.find()]
         users = [{'_id': u.id, 'version': 'NRSV'} for u in users if u.id not in user_ids]
-        
+        if not users:
+            return
+        self.users.insert_many(users)
+        self.logger.log(level=logging.INFO, msg=f'Added new users to database')
 
     def update_user(self, user_id: int, update: dict) -> None:
         self.users.update_one({'_id': user_id}, {'$set': update}) 
         self.logger.log(level=logging.INFO, msg=f'Updated user {user_id} to database')
     
     def find_user(self, user_id: int) -> dict:
-        return self.users.find_one({'_id': user_id})[0]
+        return self.users.find_one({'_id': user_id})

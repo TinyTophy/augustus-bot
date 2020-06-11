@@ -85,8 +85,7 @@ class ReactionRole(commands.Cog):
         if arg == 'add':
             channel = await discord.ext.commands.TextChannelConverter().convert(ctx, args[0])
             msg = await channel.fetch_message(args[1])
-            rrs = {args[i]: args[i + 1]
-                   for i in range(2, len(args), 2)}
+            rrs = {args[i]: args[i + 1] for i in range(2, len(args), 2)}
 
             for r in rrs:
                 role = discord.utils.get(ctx.guild.roles, name=rrs[r])
@@ -100,8 +99,7 @@ class ReactionRole(commands.Cog):
             rrs = guild['reaction_roles'][str(args[0])]['rrs']
             for r in rrs:
                 await msg.clear_reaction(r)
-            update = self.bot.db.find_guild({'_id': ctx.guild.id})[
-                0]['reaction_roles']
+            update = self.bot.db.find_guild({'_id': ctx.guild.id})[0]['reaction_roles']
             del update[str(args[0])]
             self.bot.db.update_guild(ctx.guild.id, {'reaction_roles': update})
             await ctx.send(f'Cleared reaction roles for **{args[0]}**')

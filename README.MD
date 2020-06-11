@@ -8,7 +8,8 @@
 
 4. Add a file named `info.json` to the main dir. It's format should look like this:
 
-```{
+```
+{
   "mongo": "mongo connection string",
   "token": {
     "prod": "production bot token",
@@ -20,5 +21,5 @@
 
 ## Run
 
-While in pipenv shell run `python init.py`. 
+While in pipenv shell run `python init.py`.
 
