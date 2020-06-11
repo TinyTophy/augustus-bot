@@ -2,11 +2,13 @@
 
 1. `pip3 install pipenv`
 
-2. `pipenv shell`
+2. `cd augustus-bot`
 
-3. `pipenv install`
+3. `pipenv shell`
 
-4. Add a file named `info.json` to the main dir. It's format should look like this:
+4. `pipenv install`
+
+5. Add a file named `info.json` to the main dir. It's format should look like this:
 
 ```
 {
