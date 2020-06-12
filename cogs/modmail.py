@@ -54,7 +54,7 @@ class Modmail(commands.Cog):
                     guild = self.bot.get_guild(int(msg.content))
 
                 # Get guild data from the db
-                dbguild = self.bot.db.find_guild({'_id': guild.id})[0]
+                dbguild = self.bot.db.find_guild(guild.id)
 
                 # If the modmail channel isn't set, message user and return
                 if not dbguild['modmail_channel_id']:
@@ -80,11 +80,11 @@ class Modmail(commands.Cog):
     async def modmail(self, ctx, *args):
         if args[0] == 'set':
             channel = await discord.ext.commands.TextChannelConverter().convert(ctx, args[1])
-            self.bot.db.update_guild({'_id': ctx.guild.id}, {'modmail_channel_id': channel.id})
+            self.bot.db.update_guild(ctx.guild.id, {'modmail_channel_id': channel.id})
             await ctx.send(f'Set modmail channel to {channel.mention}')
 
         elif args[0] == 'remove':
-            self.bot.db.update_guild({'_id': ctx.guild.id}, {'modmail_channel_id': None})
+            self.bot.db.update_guild(ctx.guild.id, {'modmail_channel_id': None})
             await ctx.send(f'Removed modmail from the server')
         
         # elif args[0] == 'reply':

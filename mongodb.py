@@ -84,13 +84,18 @@ class db:
     def add_member(self, guild_id: int, member: discord.Member) -> None:
         update = self.guilds.find_one({'_id': guild_id})
         if str(member.id) not in update['members']:
-            update['members'][str(member.id)] = {'verified': False, 'roles': [r.id for r in member.roles]}
-            self.guilds.update_one({'_id': guild_id}, {'$set': update})
+            memberdata = {'verified': False, 'roles': [r.id for r in member.roles]}
+            self.guilds.update_one({'_id': guild_id}, {'$set': {f'members.{member.id}': memberdata}})
             self.logger.log(level=logging.INFO, msg=f'Updated guild {guild_id} with {update} in database')
+
+    def update_member(self, member: discord.Member, **kwargs) -> None:
+        update = {f'members.{member.id}.{k}':kwargs[k] for k in kwargs}
+        self.guilds.update_one({'_id': member.guild.id}, {'$set': update})
+        self.logger.log(level=logging.INFO, msg=f'Updated member {member.id} in {member.guild.id} in database')
 
     def add_vote(self, guild_id: int, vote: dict) -> None:
         guild = self.guilds.find_one({'_id': guild_id})
-        if guild['votes'] == []:
+        if not guild['votes']:
             guild['votes'] = [vote]
         else:
             guild['votes'].append(vote)
@@ -98,9 +103,9 @@ class db:
         self.logger.log(level=logging.INFO, msg=f'Added vote {vote} to database')
 
     def update_guild(self, guild_id: int, update: dict) -> None:
-        gid = self.guilds.find({'_id': guild_id})[0]['_id']
+        gid = self.guilds.find_one({'_id': guild_id})['_id']
         self.guilds.update_one({'_id': guild_id}, {'$set': update})
-        self.logger.log(level=logging.INFO, msg=f'Updated guild {gid} with {update} in database')
+        self.logger.log(level=logging.INFO, msg=f'Updated guild {gid} in database')
 
     def update_rr_type(self, guild_id: int, msg_id: int, update: dict) -> None:
         rrs = self.guilds.find({'_id': guild_id})[0]['reaction_roles']
@@ -108,8 +113,8 @@ class db:
         self.guilds.update_one({'_id': guild_id}, {'$set': {'reaction_roles': rrs}})
         self.logger.log(level=logging.INFO, msg=f'Updated reaction role type for {msg_id} in database')
 
-    def find_guild(self, guild_id: int) -> list:
-        return list(self.guilds.find({'_id': guild_id}))[0]
+    def find_guild(self, guild_id: int) -> dict:
+        return self.guilds.find_one({'_id': guild_id})
 
     def find_guild_member(self, guild_id: int, member_id: int) -> dict:
         members = self.guilds.find({'_id': guild_id})[0]['members']
@@ -128,6 +133,12 @@ class db:
         guild['votes'].remove(vote)
         self.guilds.update_one({'_id': guild_id}, {'$set': guild})
         self.logger.log(level=logging.INFO, msg=f'Deleted vote {vote} in database')
+    
+    def add_rank(self, guild_id, role, level):
+        guild = self.guilds.find_one({'_id': guild_id})
+        if str(role.id) not in guild['ranks']:
+            self.guilds.update_one({'_id': guild_id}, {'$set': {f'ranks.{role.id}': level}})
+            self.logger.log(level=logging.INFO, msg=f'Added rank for {role.id} for {guild_id} in database')
 
 # User functions
 

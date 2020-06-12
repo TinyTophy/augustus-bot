@@ -9,8 +9,26 @@ class Levels(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        pass
+        if type(message.channel) == discord.DMChannel or message.author.bot:
+            return
 
+        guild = self.bot.db.find_guild(message.guild.id)  
+        member = guild['members'][str(message.author.id)]
+        level = int((member['xp']+guild['msg_xp'])**(1/2) / 5)
+        if level > int(member['xp']**(1/2) / 5):
+            await message.channel.send(f'{message.author.mention} just reached level **{level}**!')
+
+        member['xp']+=guild['msg_xp']
+        self.bot.db.update_member(message.author, xp=member['xp'])
+
+        ranks = guild['ranks']
+        if not ranks:
+            return
+        
+        roles = [message.guild.get_role(int(r)) for r in ranks if ranks[r]==level]
+        roles = [r for r in roles if r not in message.author.roles]
+        await message.author.add_roles(*roles)
+        
     @commands.command()
     async def level(self, ctx, member=None):
         pass
@@ -18,8 +36,5 @@ class Levels(commands.Cog):
     @is_staff()
     @commands.command()
     async def rank(self, ctx, level: int, role: discord.Role):
-        update = self.bot.db.find_guild({'_id': ctx.guild.id})[0]
-        ranks = update['ranks']
-        ranks[str(role.id)] = level
-        self.bot.db.update_guild({'_id': ctx.guild.id}, {'ranks': ranks})
+        self.bot.db.add_rank(ctx.guild.id, role, level)
         await ctx.send(f'Users will now get the **{role}** role when they reach level **{level}**.')
