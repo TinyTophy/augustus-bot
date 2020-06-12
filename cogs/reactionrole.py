@@ -11,7 +11,7 @@ class ReactionRole(commands.Cog):
     # Listeners
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        guild = self.bot.db.find_guild({'_id': payload.guild_id})[0]
+        guild = self.bot.db.find_guild(payload.guild_id)
 
         # If the message is in the list of msg ids associated with a reaction role in the db
         if str(payload.message_id) in guild['reaction_roles'] and not payload.member.bot:
@@ -41,7 +41,7 @@ class ReactionRole(commands.Cog):
             elif rtype == 'verify':
                 guild['members'][str(payload.member.id)]['verified'] = True
                 await payload.member.add_roles(role)
-                self.bot.db.update_guild({'_id': payload.guild_id}, guild)
+                self.bot.db.update_guild(payload.guild_id, guild)
                 
             # If not unique or verify, add role
             else:
@@ -51,7 +51,7 @@ class ReactionRole(commands.Cog):
     async def on_raw_reaction_remove(self, payload):
 
         # Get db rrs
-        rrs = self.bot.db.find_guild({'_id': payload.guild_id})[0]['reaction_roles']
+        rrs = self.bot.db.find_guild(payload.guild_id)['reaction_roles']
 
         # If message id is in db rrs
         if str(payload.message_id) in rrs:
@@ -81,7 +81,7 @@ class ReactionRole(commands.Cog):
     @is_staff()
     @commands.command()
     async def rr(self, ctx, arg, *args):
-        guild = self.bot.db.find_guild({'_id': ctx.guild.id})[0]
+        guild = self.bot.db.find_guild(ctx.guild.id)
         if arg == 'add':
             channel = await discord.ext.commands.TextChannelConverter().convert(ctx, args[0])
             msg = await channel.fetch_message(args[1])
@@ -99,7 +99,7 @@ class ReactionRole(commands.Cog):
             rrs = guild['reaction_roles'][str(args[0])]['rrs']
             for r in rrs:
                 await msg.clear_reaction(r)
-            update = self.bot.db.find_guild({'_id': ctx.guild.id})[0]['reaction_roles']
+            update = self.bot.db.find_guild(ctx.guild.id)['reaction_roles']
             del update[str(args[0])]
             self.bot.db.update_guild(ctx.guild.id, {'reaction_roles': update})
             await ctx.send(f'Cleared reaction roles for **{args[0]}**')

@@ -55,31 +55,30 @@ class Augustus(commands.Bot):
 
     async def on_member_join(self, member):
         self.db.add_member(member.guild.id, member)
-        guild = self.db.find_guild(member.guild.id)[0]
+        self.db.add_user(member.id)
+        guild = self.db.find_guild(member.guild.id)
         members = guild['members']
-        role_ids = [r for r in members[str(
-            member.id)]['roles'] if r in guild['sticky_roles']]
-        if role_ids != []:
+        role_ids = [r for r in members[str(member.id)]['roles'] if r in guild['sticky_roles']]
+        if role_ids:
             roles = [member.guild.get_role(rid) for rid in role_ids]
             await member.add_roles(roles)
 
     async def on_member_update(self, before, after):
         if before.roles != after.roles:
-            update = self.db.find_guild(before.guild.id)[0]
-            update['members'][str(before.id)]['roles'] = [
-                r.id for r in after.roles]
+            update = self.db.find_guild(before.guild.id)
+            update['members'][str(before.id)]['roles'] = [r.id for r in after.roles]
             self.db.update_guild(before.guild.id, update)
 
     async def on_guild_remove(self, guild):
         self.db.delete_guild(guild.id)
 
     async def on_guild_role_create(self, role):
-        roles = self.db.find_guild(role.guild.id)[0]['roles']
+        roles = self.db.find_guild(role.guild.id)['roles']
         roles.append(role.id)
         self.db.update_guild(role.guild.id, {'roles': roles})
 
     async def on_guild_role_delete(self, role):
-        roles = self.db.find_guild(role.guild.id)[0]['roles']
+        roles = self.db.find_guild(role.guild.id)['roles']
         roles.remove(role.id)
         self.db.update_guild(role.guild.id, {'roles': roles})
 
