@@ -1,6 +1,6 @@
 ## Setup
 
-1. `pip3 install pipenv`
+1. `pip install pipenv`
 
 2. `cd augustus-bot`
 
