@@ -12,7 +12,10 @@ class Levels(commands.Cog):
         if type(message.channel) == discord.DMChannel or message.author.bot:
             return
 
-        guild = self.bot.db.find_guild(message.guild.id)  
+        guild = self.bot.db.find_guild(message.guild.id)
+        if not guild['msg_xp']:
+            return
+
         member = guild['members'][str(message.author.id)]
         level = int((member['xp']+guild['msg_xp'])**(1/2) / 5)
         if level > int(member['xp']**(1/2) / 5):
@@ -32,9 +35,33 @@ class Levels(commands.Cog):
     @commands.command()
     async def level(self, ctx, member=None):
         pass
+    
+    @is_staff()
+    @commands.command()
+    async def levels(self, ctx, arg, xp:int=5):
+        if arg.lower() == 'off':
+            self.bot.db.update_guild(ctx.guild.id, msg_xp=0)
+            await ctx.send('Turned chat leveling off.')
+        elif arg.lower() == 'on':
+            self.bot.db.update_guild(ctx.guild.id, msg_xp=xp)
+            await ctx.send(f'Turned chat leveling on with **{xp}**xp every message.')
+    
+    @is_staff()
+    @commands.command()
+    async def levelmsg(self, ctx, arg):
+        if arg.lower() == 'off':
+            self.bot.db.update_guild(ctx.guild.id, level_msg=False)
+            await ctx.send('Turned chat level messages off.')
+        elif arg.lower() == 'on':
+            self.bot.db.update_guild(ctx.guild.id, level_msg=True)
+            await ctx.send('Turned chat level messages on.')
 
     @is_staff()
     @commands.command()
-    async def rank(self, ctx, level: int, role: discord.Role):
-        self.bot.db.add_rank(ctx.guild.id, role, level)
-        await ctx.send(f'Users will now get the **{role}** role when they reach level **{level}**.')
+    async def rank(self, ctx, arg, role: discord.Role, level: int=None):
+        if arg.lower() == 'add':
+            self.bot.db.add_rank(ctx.guild.id, role, level)
+            await ctx.send(f'Users will now get the **{role}** role when they reach level **{level}**.')
+        elif arg.lower() == 'remove':
+            self.bot.db.delete_rank(ctx.guild.id, role.id)
+            await ctx.send(f'Removed rank for **{role}** role.')

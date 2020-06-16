@@ -18,9 +18,8 @@ from cogs.music import Music
 from cogs.quickpoll import Quickpoll
 from cogs.quotes import Quotes
 from cogs.reactionrole import ReactionRole
-from cogs.vote import Vote
 from mode import token_mode
-from mongodb import db
+from mongodb import MongoDB
 from utils import get_prefix
 
 
@@ -28,7 +27,7 @@ class Augustus(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
-        self.db = db(self.logger)
+        self.db = MongoDB(self.logger)
         info = json.load(open('info.json'))
         token = info['token'][token_mode()]
         super().__init__(command_prefix=get_prefix, help_command=Help())
@@ -56,7 +55,7 @@ class Augustus(commands.Bot):
     async def on_member_join(self, member):
         self.db.add_member(member.guild.id, member)
         self.db.add_user(member.id)
-        guild = self.db.find_guild(member.guild.id)
+        guild = self.db.get_guild(member.guild.id)
         members = guild['members']
         role_ids = [r for r in members[str(member.id)]['roles'] if r in guild['sticky_roles']]
         if role_ids:
@@ -65,23 +64,18 @@ class Augustus(commands.Bot):
 
     async def on_member_update(self, before, after):
         if before.roles != after.roles:
-            update = self.db.find_guild(before.guild.id)
-            update['members'][str(before.id)]['roles'] = [r.id for r in after.roles]
-            self.db.update_guild(before.guild.id, update)
-
-    async def on_guild_remove(self, guild):
-        self.db.delete_guild(guild.id)
+            roles = [r.id for r in after.roles]
+            self.db.update_member(after, roles=roles)
 
     async def on_guild_role_create(self, role):
-        roles = self.db.find_guild(role.guild.id)['roles']
-        roles.append(role.id)
-        self.db.update_guild(role.guild.id, {'roles': roles})
+        self.db.add_role(role)
 
     async def on_guild_role_delete(self, role):
-        roles = self.db.find_guild(role.guild.id)['roles']
-        roles.remove(role.id)
-        self.db.update_guild(role.guild.id, {'roles': roles})
+        self.db.remove_role(role)
 
     async def on_guild_join(self, guild):
         self.db.add_guild(guild)
         self.db.add_users(guild.members)
+    
+    async def on_guild_remove(self, guild):
+        self.db.remove_guild(guild.id)

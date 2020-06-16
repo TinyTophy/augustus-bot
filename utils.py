@@ -21,7 +21,7 @@ def is_muted(member, muterole):
 
 def get_prefix(bot, message):
     if type(message.channel) == discord.TextChannel:
-        return bot.db.find_guild(message.guild.id)['prefix']
+        return bot.db.get_guild(message.guild.id)['prefix']
     else:
         return ['!']
 
