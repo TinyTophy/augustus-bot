@@ -12,17 +12,16 @@ class Levels(commands.Cog):
         if type(message.channel) == discord.DMChannel or message.author.bot:
             return
 
-        guild = self.bot.db.find_guild(message.guild.id)
+        guild = self.bot.db.get_guild(message.guild.id)
         if not guild['msg_xp']:
             return
 
-        member = guild['members'][str(message.author.id)]
-        level = int((member['xp']+guild['msg_xp'])**(1/2) / 5)
+        member = self.bot.db.get_member(message.author)
+        level = int((member['xp'] + guild['msg_xp'])**(1/2) / 5)
         if level > int(member['xp']**(1/2) / 5):
             await message.channel.send(f'{message.author.mention} just reached level **{level}**!')
-
-        member['xp']+=guild['msg_xp']
-        self.bot.db.update_member(message.author, xp=member['xp'])
+        
+        self.bot.db.update_member(message.author, xp=member['xp']+guild['msg_xp'])
 
         ranks = guild['ranks']
         if not ranks:

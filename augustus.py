@@ -41,7 +41,7 @@ class Augustus(commands.Bot):
         self.add_cog(Embed(self))
         self.add_cog(ReactionRole(self))
         self.add_cog(Levels(self))
-        self.add_cog(Music(self))
+        # self.add_cog(Music(self))
         self.run(token)
 
     async def on_ready(self):

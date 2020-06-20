@@ -16,7 +16,7 @@ class Bible(commands.Cog):
         if type(message.channel) == discord.DMChannel or message.author.bot:
             return
 
-        pattern1 = re.compile(r"\[(?P<book>(?:\d\s*)?[A-Z]?[a-z]+)\s*(?P<chapter>\d+):(?P<verses>\d+(?:-\d+)?)(?:\s(?P<version>[A-Z]?[a-z]+))?\]")
+        pattern1 = re.compile(r"^\[(?P<book>(?:\d\s*)?[A-Z]?[a-z]+)\s*(?P<chapter>\d+):(?P<verses>\d+(?:-\d+)?)(?:\s(?P<version>[A-Z]?[a-z]+))?\]")
         match = pattern1.match(message.content)
 
         if not match:

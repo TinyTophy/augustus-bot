@@ -6,18 +6,18 @@ import discord
 from bson.objectid import ObjectId
 
 
-class MongoDB(MongoClient):
+class MongoDB():
     def __init__(self, logger=None):
-        myclient = MongoClient(json.load(open('info.json'))['mongo'])
-
-        mydb = myclient[db_mode()]
+        client = MongoClient(json.load(open('info.json'))['mongo'])
+        mydb = client[db_mode()]
         self.guilds = mydb['guilds']
         self.users = mydb['users']
         self.info = mydb['info']
-        self.logger = logger
-        self.guilds.create_index('members.member-id', unique=True)
-        if 'prod' in myclient.list_database_names():
-            print('Connected to database!')
+        if logger:
+            self.logger = logging.getLogger('discord')
+            logging.basicConfig(level=logging.INFO)
+        else:
+            self.logger = logger
 
 
 # Guild Functions
@@ -41,21 +41,19 @@ class MongoDB(MongoClient):
                     'warn_kick_limit': None,
                     'warn_ban_limit': None,
                     'msg_xp': 5,
-                    'members': [
-                        {
-                            'member_id': m.id,
+                    'members': {
+                        str(m.id): {
                             'roles': [r.id for r in m.roles], 
                             'quotes': [], 
                             'warns': 0, 
                             'xp': 0
-                        } for m in guild.members
-                    ],
+                        } for m in guild.members},
                     'roles': [r.id for r in guild.roles],
                     'sticky_roles': [],
                     'autoroles': [],
-                    'reaction_roles': [],
+                    'reaction_roles': {},
                     'modlog_entries': [],
-                    'ranks': [],
+                    'ranks': {},
                     'level_msg': True
                 }
             )
@@ -126,16 +124,18 @@ class MongoDB(MongoClient):
     
     # Read Functions
     def get_member(self, member: discord.Member) -> dict:
-        return self.guilds.find_one(
+        members = self.guilds.find_one(
             {'_id': member.guild.id},
             {
                 'members': {
                     '$elemMatch': {
-                        '_id': member.id
+                        'member_id': member.id
                     }
                 }
             }
-        )['members'][0]
+        )['members']
+        if members:
+            return members[0]
     
     def get_all_members(self, guild_id: int) -> list:
         return self.guilds.find_one({'_id': guild_id})['members']
@@ -143,7 +143,8 @@ class MongoDB(MongoClient):
     def update_member(self, member: discord.Member, **kwargs) -> None:
         self.guilds.update_one(
             {
-                '_id': member.guild.id
+                '_id': member.guild.id,
+                'members.member_id': member.id
             }, 
             {'$set': {
                 f'members.$.{member.id}.{k}': kwargs[k] for k in kwargs

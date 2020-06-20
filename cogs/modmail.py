@@ -43,7 +43,7 @@ class Modmail(commands.Cog):
                     await message.channel.send('You are in multiple servers with the bot. Enter the ID of the one you wish to contact.')
 
                     # Try to wait for response 
-                    try:    
+                    try:
                         msg = await self.bot.wait_for('message', timeout=60, check=check)
                     
                     # Timeout after 60s
