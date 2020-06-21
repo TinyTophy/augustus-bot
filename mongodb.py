@@ -192,20 +192,20 @@ class MongoDB():
 
     # Create Function
     def add_rr(self, guild_id: int, msg_id: int, rr: dict) -> None:
-        update = self.guilds.find_one(
+        guild = self.guilds.find_one(
             {
                 '_id': guild_id
             }
         )
 
         # If the message is not in the db yet
-        if str(msg_id) not in update['reaction_roles']:
-            update['reaction_roles'][str(msg_id)] = {'type': 'normal', 'rrs': rr}
+        if str(msg_id) not in guild['reaction_roles']:
+            guild['reaction_roles'][str(msg_id)] = {'type': 'normal', 'rrs': rr}
 
         else:
             i = list(rr.keys())[0]
-            update['reaction_roles'][str(msg_id)]['rrs'][i] = rr[i]
-        self.guilds.update_one({'_id': guild_id}, {'$set': update})
+            guild['reaction_roles'][str(msg_id)]['rrs'][i] = rr[i]
+        self.guilds.update_one({'_id': guild_id}, {'$set': guild})
         self.logger.log(level=logging.INFO, msg=f'Added reaction role {rr} to database')
     
     # Update Function
