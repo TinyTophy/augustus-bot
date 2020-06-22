@@ -18,7 +18,7 @@ class Levels(commands.Cog):
 
         member = self.bot.db.get_member(message.author)
         level = int((member['xp'] + guild['msg_xp'])**(1/2) / 5)
-        if level > int(member['xp']**(1/2) / 5):
+        if level > int(member['xp']**(1/2) / 5) and guild['level_msg']:
             await message.channel.send(f'{message.author.mention} just reached level **{level}**!')
         
         self.bot.db.update_member(message.author, xp=member['xp']+guild['msg_xp'])
@@ -30,6 +30,7 @@ class Levels(commands.Cog):
         roles = [message.guild.get_role(int(r)) for r in ranks if ranks[r]==level]
         roles = [r for r in roles if r not in message.author.roles]
         await message.author.add_roles(*roles)
+        await message.author.remove_roles()
         
     @commands.command()
     async def level(self, ctx, member=None):
@@ -64,3 +65,7 @@ class Levels(commands.Cog):
         elif arg.lower() == 'remove':
             self.bot.db.delete_rank(ctx.guild.id, role.id)
             await ctx.send(f'Removed rank for **{role}** role.')
+    
+    @commands.command()
+    async def ranks(self, ctx):
+        pass

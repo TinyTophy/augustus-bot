@@ -53,7 +53,7 @@ class Augustus(commands.Bot):
         print('-----------------------')
 
     async def on_member_join(self, member):
-        self.db.add_member(member.guild.id, member)
+        self.db.add_member(member)
         self.db.add_user(member.id)
         guild = self.db.get_guild(member.guild.id)
         members = guild['members']

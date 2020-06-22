@@ -41,8 +41,10 @@ class MongoDB():
                     'warn_kick_limit': None,
                     'warn_ban_limit': None,
                     'msg_xp': 5,
+                    'level_msg': True,
                     'members': {
                         str(m.id): {
+                            'display_name': f'{m.name}#{m.discriminator}',
                             'roles': [r.id for r in m.roles], 
                             'quotes': [], 
                             'warns': 0, 
@@ -53,8 +55,7 @@ class MongoDB():
                     'autoroles': [],
                     'reaction_roles': {},
                     'modlog_entries': [],
-                    'ranks': {},
-                    'level_msg': True
+                    'ranks': {}
                 }
             )
             self.logger.log(
@@ -103,39 +104,38 @@ class MongoDB():
 # Member Functions
     
     # Create Function
-    def add_member(self, guild_id: int, member: discord.Member) -> None:
-        update = self.guilds.find_one({'_id': guild_id})
-        if member.id not in update['members']:
+    def add_member(self, member: discord.Member) -> None:
+        members = self.guilds.find_one({'_id': member.guild.id})['members']
+        if str(member.id) not in members:
             self.guilds.update_one(
                 {
-                    '_id': guild_id
+                    '_id': member.guild.id
                 },
                 {'$set': {
                     f'members.{member.id}': {
-                        'verified': False, 'roles': [r.id for r in member.roles]
+                        'display_name': f'{member.name}#{member.discriminator}',
+                        'roles': [r.id for r in member.roles], 
+                        'quotes': [], 
+                        'warns': 0, 
+                        'xp': 0
                         }
                     }
                 }
             )
             self.logger.log(
                 level=logging.INFO,
-                msg=f'Updated guild {guild_id} with {update} in database'
+                msg=f'Added member {member.id} in {member.guild.id} in database'
             )
     
     # Read Functions
     def get_member(self, member: discord.Member) -> dict:
         members = self.guilds.find_one(
-            {'_id': member.guild.id},
             {
-                'members': {
-                    '$elemMatch': {
-                        'member_id': member.id
-                    }
-                }
+                '_id': member.guild.id
             }
         )['members']
-        if members:
-            return members[0]
+        if str(member.id) in members:
+            return members[str(member.id)]
     
     def get_all_members(self, guild_id: int) -> list:
         return self.guilds.find_one({'_id': guild_id})['members']
@@ -143,11 +143,10 @@ class MongoDB():
     def update_member(self, member: discord.Member, **kwargs) -> None:
         self.guilds.update_one(
             {
-                '_id': member.guild.id,
-                'members.member_id': member.id
+                '_id': member.guild.id
             }, 
             {'$set': {
-                f'members.$.{member.id}.{k}': kwargs[k] for k in kwargs
+                f'members.{member.id}.{k}': kwargs[k] for k in kwargs
                 }
             }
         )
