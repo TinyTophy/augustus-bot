@@ -73,6 +73,6 @@ class Bible(commands.Cog):
 
     @commands.command()
     async def setversion(self, ctx, version: str):
-        self.bot.db.update_user(ctx.author.id, {'version': version})
+        self.bot.db.update_user(ctx.author.id, version=version)
         await ctx.send(f'Set default version to **{version}**.')
 

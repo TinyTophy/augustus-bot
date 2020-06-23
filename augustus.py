@@ -27,7 +27,7 @@ class Augustus(commands.Bot):
     def __init__(self):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
-        self.db = MongoDB(self.logger)
+        self.db = MongoDB()
         info = json.load(open('info.json'))
         token = info['token'][token_mode()]
         super().__init__(command_prefix=get_prefix, help_command=Help())
