@@ -8,3 +8,5 @@ tex.png
 test.tex
 schema.sql
 apibible.py
+.vscode
+.idea

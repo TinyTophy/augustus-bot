@@ -10,25 +10,17 @@ class Mod(commands.Cog):
         self.bot = bot
 
 # Listeners
-
-    # Bans blacklisted users if they are unbanned
-    @commands.Cog.listener()
-    async def on_member_unban(self, guild, user: discord.User):
-        if str(user.id) in self.bot.db.find_guild(guild.id)['blacklist']:
-            await guild.ban(user, reason='User has been blacklisted by an admin.')
-    
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        roles = self.bot.db.find_guild(member.guild.id)['autoroles']
-        for r in roles:
-            await member.add_roles(member.guild.get_role(r))
+        roles = self.bot.db.get_guild(member.guild.id)['autoroles']
+        await member.add_roles(*[member.guild.get_role(r) for r in roles])
 
 # Commands
 
     @is_staff()
     @commands.command()
     async def autorole(self, ctx, role: discord.Role):
-        roles = self.bot.db.find_guild(ctx.guild.id)['autoroles']
+        roles = self.bot.db.get_guild(ctx.guild.id)['autoroles']
         roles.append(role.id)
         self.bot.db.update_guild(ctx.guild.id, {'autoroles': roles})
         for m in ctx.guild.members:
@@ -38,7 +30,7 @@ class Mod(commands.Cog):
     @is_staff()
     @commands.command()
     async def stickyrole(self, ctx, role: discord.Role):
-        roles = self.bot.db.find_guild(ctx.guild.id)['sticky_roles']
+        roles = self.bot.db.get_guild(ctx.guild.id)['sticky_roles']
         roles.append(role.id)
         self.bot.db.update_guild(ctx.guild.id, {'sticky_roles': roles})
         await ctx.send(f'Added **{role}** to sticky roles.')
@@ -49,25 +41,15 @@ class Mod(commands.Cog):
         deleted = await ctx.channel.purge(limit=amount+1)
         await ctx.send(f'Deleted **{len(deleted)-1}** messages.', delete_after=5)
 
-    @commands.command()
-    async def blacklist(self, ctx, user_id):
-        if is_admin(ctx.author):
-            dbg = self.bot.db.find_guild(ctx.guild.id)
-            dbg['blacklist'].append(user_id)
-            self.bot.db.update_guild(ctx.guild.id, dbg)
-            user = await self.bot.fetch_user(user_id)
-            await ctx.guild.ban(user, reason='User has been blacklisted by an admin.')
-            await ctx.send(f'Added **{user}** to the blacklist.')
-
     @is_staff()
     @commands.command()
     async def mute(self, ctx, member: discord.Member, reason=None):
-        modrole = ctx.guild.get_role(self.bot.db.find_guild(ctx.guild.id)['modrole_id'])
+        modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
         if not_staff(modrole, member) or is_admin(ctx.author):
-            muterole = ctx.guild.get_role(self.bot.db.find_guild(ctx.guild.id)['muterole_id'])
+            muterole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['muterole_id'])
             await member.add_roles(muterole)
             await ctx.send(f'{member.mention} has been muted!')
-            dbguild = self.bot.db.find_guild(ctx.guild.id)
+            dbguild = self.bot.db.get_guild(ctx.guild.id)
             mlchannel = ctx.guild.get_channel(dbguild['modlog_channel_id'])
             case = len(dbguild['modlog_entries']) + 1
             p = dbguild['prefix']
@@ -87,11 +69,11 @@ class Mod(commands.Cog):
     @is_staff()
     @commands.command()
     async def warn(self, ctx, member: discord.Member, reason):
-        modrole = ctx.guild.get_role(self.bot.db.find_guild(ctx.guild.id)['modrole_id'])
+        modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
         if not modrole:
             await ctx.send('No modrole is set. Use the `modrole` command to set one.')
         elif not_staff(modrole, member) or is_admin(ctx.author):
-            dbguild = self.bot.db.find_guild(ctx.guild.id)
+            dbguild = self.bot.db.get_guild(ctx.guild.id)
             members = dbguild['members']
             members[str(member.id)]['warns']+=1
             self.bot.db.update_guild(ctx.guild.id, {'members': members})
@@ -120,12 +102,12 @@ class Mod(commands.Cog):
     @is_staff()
     @commands.command()
     async def unmute(self, ctx, member: discord.Member):
-        modrole = ctx.guild.get_role(self.bot.db.find_guild(ctx.guild.id)['modrole_id'])
+        modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
         if not_staff(modrole, member) or is_admin(ctx.author):
-            muterole = ctx.guild.get_role(self.bot.db.find_guild(ctx.guild.id)['muterole_id'])
+            muterole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['muterole_id'])
             await member.remove_roles(muterole)
             await ctx.send(f'{member.mention} has been unmuted!')
-            dbguild = self.bot.db.find_guild(ctx.guild.id)
+            dbguild = self.bot.db.get_guild(ctx.guild.id)
             mlchannel = ctx.guild.get_channel(dbguild['modlog_channel_id'])
             case = len(dbguild['modlog_entries']) + 1
             p = dbguild['prefix']
@@ -151,7 +133,7 @@ class Mod(commands.Cog):
     @commands.command()
     async def prefix(self, ctx, arg, prefix):
         if is_admin(ctx.author):
-            prefixes = self.bot.db.find_guild(ctx.guild.id)['prefix']
+            prefixes = self.bot.db.get_guild(ctx.guild.id)['prefix']
             if prefixes != prefixes[0]:
                 if arg == 'add':
                     if 0 < len(prefix) < 5:
@@ -194,7 +176,7 @@ class Mod(commands.Cog):
     @commands.command()
     async def mrupdate(self, ctx):
         if is_admin(ctx.author):
-            muterole_id = self.bot.db.find_guild(ctx.guild.id)['muterole_id']
+            muterole_id = self.bot.db.get_guild(ctx.guild.id)['muterole_id']
             if muterole_id != None:
                 mute = ctx.guild.get_role(muterole_id)
                 for tc in ctx.guild.text_channels:
@@ -225,7 +207,7 @@ class Mod(commands.Cog):
     @is_staff()
     @commands.command()
     async def verify(self, ctx, member: discord.Member, *msg_ids):
-        g = self.bot.db.find_guild(ctx.guild.id)
+        g = self.bot.db.get_guild(ctx.guild.id)
         modrole = ctx.guild.get_role(g['modrole_id'])
         msgs = []
         for mid in msg_ids:

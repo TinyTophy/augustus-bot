@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import bs4
 from discord.ext import commands
+import string
 
 
 class Bible(commands.Cog):
@@ -16,7 +17,7 @@ class Bible(commands.Cog):
         if type(message.channel) == discord.DMChannel or message.author.bot:
             return
 
-        pattern1 = re.compile(r"\[(?P<book>(?:\d\s*)?[A-Z]?[a-z]+)\s*(?P<chapter>\d+):(?P<verses>\d+(?:-\d+)?)(?:\s(?P<version>[A-Z]?[a-z]+))?\]")
+        pattern1 = re.compile(r"^\[(?P<book>(?:\d\s*)?[A-Z]?[a-z]+)\s*(?P<chapter>\d+):(?P<verses>(?P<start>\d+)(?:-(?P<end>\d+))?)(?:\s(?P<version>[A-Z]?[a-z]+))?\]$")
         match = pattern1.match(message.content)
 
         if not match:
@@ -29,6 +30,7 @@ class Bible(commands.Cog):
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)
+            # print(url)
             response = requests.get(url)
             soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -41,11 +43,11 @@ class Bible(commands.Cog):
 
             verselist = results.findAll(text=True)
 
-            for t in ['\n', '[', ']', ' ', 'a']:
-                verselist = list(filter(lambda x: x != t, verselist))
+            trash = ['\n', '[', ']', ' ', '(', ')'] + list(string.ascii_uppercase) + list(string.ascii_lowercase)
+            verselist = list(filter(lambda x: x not in trash, verselist))
 
-            def check_int(str):
-                try:
+            def check_int(str): 
+                try:    
                     int(str)
                     return True
                 except:
@@ -53,9 +55,10 @@ class Bible(commands.Cog):
             
             span = [i for i, item in enumerate(verselist) if check_int(item)]
             end = verselist.index('Read full chapter')
+            versenums = list(range(int(groups['start']),int(groups['end'])+1))
 
-            for i in span:
-                verselist[i] = f'**{int(verselist[i])}.**'
+            for i, item in enumerate(span):
+                verselist[item] = f'**{versenums[i]}.**'
 
             verselist = verselist[span[0]:end]
 
@@ -73,6 +76,6 @@ class Bible(commands.Cog):
 
     @commands.command()
     async def setversion(self, ctx, version: str):
-        self.bot.db.update_user(ctx.author.id, {'version': version})
+        self.bot.db.update_user(ctx.author.id, version=version)
         await ctx.send(f'Set default version to **{version}**.')
 
