@@ -40,7 +40,7 @@ class Levels(commands.Cog):
     @commands.command()
     async def levels(self, ctx, arg, xp:int=5):
         if arg.lower() == 'off':
-            self.bot.db.update_guild(ctx.guild.id, msg_xp=0)
+            self.bot.db.update_guild(ctx.guild.id, msg_xp=None)
             await ctx.send('Turned chat leveling off.')
         elif arg.lower() == 'on':
             self.bot.db.update_guild(ctx.guild.id, msg_xp=xp)
@@ -68,4 +68,16 @@ class Levels(commands.Cog):
     
     @commands.command()
     async def ranks(self, ctx):
-        pass
+        ranks = self.bot.db.get_guild(ctx.guild.id)['ranks']
+
+        if not ranks:
+            await ctx.send('This server has no ranks.')
+            return
+
+        roles = [ctx.guild.get_role(int(k)).mention for k in ranks.keys()]
+        levels = [str(ranks[k]) for k in ranks]
+
+        embed = discord.Embed(title='Ranks')
+        embed.add_field(name='Role', value='\n\n'.join(roles), inline=True)
+        embed.add_field(name='Role', value='\n\n'.join(levels), inline=True)
+        await ctx.send(embed=embed)

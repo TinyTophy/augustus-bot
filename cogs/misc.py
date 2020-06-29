@@ -1,17 +1,17 @@
 import asyncio
-from datetime import datetime
 import json
-import requests
-from bs4 import BeautifulSoup
+import math
 import re
-import pytz
+from datetime import datetime
 
 import discord
 import humanize
+import requests
+from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands
-from bs4 import BeautifulSoup
-from utils import is_admin, is_staff, not_staff, pretty_delta, order_by_date
+
+from utils import is_admin, is_staff, not_staff, pretty_delta
 
 
 class Misc(commands.Cog):
@@ -29,15 +29,24 @@ class Misc(commands.Cog):
         await ctx.send(' '.join(msg))
 
     @commands.command()
-    async def info(self, ctx, arg):
-        member = await discord.ext.commands.MemberConverter().convert(ctx, arg)
+    async def info(self, ctx, member: discord.Member=None):
+        if not member:
+            member = ctx.author
+        # else:
+        #     member = await discord.ext.commands.MemberConverter().convert(ctx, member)
         create_delta = relativedelta(datetime.now(), member.created_at)
         join_delta = relativedelta(datetime.now(), member.joined_at)
         cdelta = pretty_delta(create_delta)
         jdelta = pretty_delta(join_delta)
         cutc = member.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')
         jutc = member.joined_at.strftime('%Y-%m-%d %H:%M:%S UTC')
-        rank = order_by_date(ctx.guild.members, member)
+        ctx.guild.members.sort(key=lambda m: m.created_at)
+        rank = ctx.guild.members.index(member) + 1
+        ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(math.floor(n/10)%10!=1)*(n%10<4)*n%10::4])
+        if rank == 1:
+            rankstr = 'Oldest account on the server'
+        else:
+            rankstr = f'{ordinal(rank)} oldest account on the server'
 
         embed = discord.Embed(color=member.color)
         embed.set_author(name=f'{member}', url=member.avatar_url_as(
@@ -45,7 +54,7 @@ class Misc(commands.Cog):
         embed.set_footer(text=f'ID: {member.id}')
         embed.add_field(name='Nickname', value=member.nick, inline=True)
         embed.add_field(name='Created At',
-                        value=f'{cutc}\n({cdelta})\n{rank}', inline=True)
+                        value=f'{cutc}\n({cdelta})\n{rankstr}', inline=True)
         embed.add_field(name='Joined At',
                         value=f'{jutc}\n({jdelta})', inline=True)
         await ctx.send(embed=embed)

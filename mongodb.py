@@ -38,7 +38,7 @@ class MongoDB():
                     'warn_mute_limit': None,
                     'warn_kick_limit': None,
                     'warn_ban_limit': None,
-                    'msg_xp': 5,
+                    'msg_xp': None,
                     'level_msg': True,
                     'members': {
                         str(m.id): {

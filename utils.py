@@ -1,6 +1,5 @@
 from discord.ext import commands
 import discord
-from dateutil.relativedelta import relativedelta
 import json
 
 
@@ -19,11 +18,7 @@ def is_admin(member):
 def is_muted(member, muterole):
     return muterole in member.roles
 
-def get_prefix(bot, message):
-    if type(message.channel) == discord.TextChannel:
-        return bot.db.get_guild(message.guild.id)['prefix']
-    else:
-        return ['!']
+
 
 def pretty_delta(delta):
     pdelta = {}
@@ -47,23 +42,3 @@ def pretty_delta(delta):
             pstr += f' {pdelta[k]} {k},'
     return pstr[1:]
 
-def order_by_date(members, member):
-    members.sort(key=lambda m: m.created_at)
-    rank = str(members.index(member) + 1)
-    rint = int(rank[-1])
-    if rank[-2] != '1':
-        if rint == 0 or rint >= 4:
-            suffix = 'th'
-        elif rint == 1:
-            suffix = 'st'
-        elif rint == 2:
-            suffix = 'nd'
-        elif rint == 3:
-            suffix = 'rd'
-    else:
-        suffix = 'th'
-    return f'{rank}{suffix} oldest account on the server'
-
-
-def to_relativedelta(tdelta):
-    return relativedelta(seconds=int(tdelta.total_seconds()), microseconds=tdelta.microseconds)

@@ -41,16 +41,6 @@ class Mod(commands.Cog):
         deleted = await ctx.channel.purge(limit=amount+1)
         await ctx.send(f'Deleted **{len(deleted)-1}** messages.', delete_after=5)
 
-    @commands.command()
-    async def blacklist(self, ctx, user_id):
-        if is_admin(ctx.author):
-            dbg = self.bot.db.get_guild(ctx.guild.id)
-            dbg['blacklist'].append(user_id)
-            self.bot.db.update_guild(ctx.guild.id, dbg)
-            user = await self.bot.fetch_user(user_id)
-            await ctx.guild.ban(user, reason='User has been blacklisted by an admin.')
-            await ctx.send(f'Added **{user}** to the blacklist.')
-
     @is_staff()
     @commands.command()
     async def mute(self, ctx, member: discord.Member, reason=None):

@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import asyncio
 
-from utils import is_muted, is_staff, is_admin
+from utils import is_staff, is_admin
 
 
 class ModLog(commands.Cog):
@@ -16,7 +16,7 @@ class ModLog(commands.Cog):
     async def on_member_ban(self, guild, member: discord.User):
         await asyncio.sleep(2)
         audit = [e async for e in guild.audit_logs(action=discord.AuditLogAction.ban)][0]
-        dbguild = self.bot.db.find_guild(guild.id)
+        dbguild = self.bot.db.get_guild(guild.id)
         mlchannel = guild.get_channel(dbguild['modlog_channel_id'])
         case = len(dbguild['modlog_entries']) + 1
         p = dbguild['prefix']
@@ -59,7 +59,7 @@ class ModLog(commands.Cog):
         await asyncio.sleep(2)
         audit = [e async for e in member.guild.audit_logs(action=discord.AuditLogAction.kick)][0]
         if audit.target == member:
-            dbguild = self.bot.db.find_guild(member.guild.id)
+            dbguild = self.bot.db.get_guild(member.guild.id)
             mlchannel = member.guild.get_channel(dbguild['modlog_channel_id'])
             case = len(dbguild['modlog_entries']) + 1
             if audit.reason == None:
@@ -80,13 +80,12 @@ class ModLog(commands.Cog):
     @commands.command()
     async def modlog(self, ctx, channel: discord.TextChannel):
         if is_admin(ctx.author):
-            self.bot.db.update_guild(ctx.guild.id, {'modlog_channel_id': channel.id})
+            self.bot.db.update_guild(ctx.guild.id, modlog_channel_id=channel.id)
             await ctx.send(f'Set modlog channel to {channel.mention}')
 
     @is_staff()
     @commands.command()
     async def reason(self, ctx, case, *, reason):
-        entries = self.bot.db.find_guild(ctx.guild.id)['modlog_entries']
+        entries = self.bot.db.get_guild(ctx.guild.id)['modlog_entries']
         msg = await ctx.fetch_message(entries[case-1])
-
         msg.edit(embed=msg.embed)

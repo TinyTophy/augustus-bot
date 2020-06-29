@@ -18,9 +18,9 @@ from cogs.music import Music
 from cogs.quickpoll import Quickpoll
 from cogs.quotes import Quotes
 from cogs.reactionrole import ReactionRole
+from cogs.profile import Profile
 from mode import token_mode
 from mongodb import MongoDB
-from utils import get_prefix
 
 
 class Augustus(commands.Bot):
@@ -30,6 +30,13 @@ class Augustus(commands.Bot):
         self.db = MongoDB()
         info = json.load(open('info.json'))
         token = info['token'][token_mode()]
+
+        def get_prefix(bot, message):
+            if type(message.channel) == discord.TextChannel:
+                return bot.db.get_guild(message.guild.id)['prefix']
+            else:
+                return ['!']
+
         super().__init__(command_prefix=get_prefix, help_command=Help())
         self.add_cog(Bible(self))
         self.add_cog(Modmail(self))
@@ -41,6 +48,7 @@ class Augustus(commands.Bot):
         self.add_cog(Embed(self))
         self.add_cog(ReactionRole(self))
         self.add_cog(Levels(self))
+        self.add_cog(Profile(self))
         # self.add_cog(Music(self))
         self.run(token)
 
@@ -48,7 +56,6 @@ class Augustus(commands.Bot):
         for guild in self.guilds:
             self.db.add_guild(guild)
             self.db.add_users(guild.members)
-        await self.change_presence(activity=discord.Game(name=f'DM me for staff'))
         print(f'Logged in as {self.user}')
         print('-----------------------')
 
@@ -79,3 +86,5 @@ class Augustus(commands.Bot):
     
     async def on_guild_remove(self, guild):
         self.db.remove_guild(guild.id)
+    
+    
