@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from utils import is_staff
 
 
 class Levels(commands.Cog):
@@ -35,8 +34,7 @@ class Levels(commands.Cog):
     @commands.command()
     async def level(self, ctx, member=None):
         pass
-    
-    @is_staff()
+
     @commands.command()
     async def levels(self, ctx, arg, xp:int=5):
         if arg.lower() == 'off':
@@ -45,8 +43,22 @@ class Levels(commands.Cog):
         elif arg.lower() == 'on':
             self.bot.db.update_guild(ctx.guild.id, msg_xp=xp)
             await ctx.send(f'Turned chat leveling on with **{xp}**xp every message.')
+        elif arg.lower() == 'reset':
+            await ctx.send("This will **permanently** reset all members' xp. To confirm type **y**. To cancel type **n**")
+            try:
+                msg = await self.bot.wait_for(
+                    'message', 
+                    timeout=60, check=lambda m: m.author == ctx.author 
+                    and m.content.lower() in ['y', 'n', 'yes', 'no']
+                )
+            except:
+                await ctx.send('Timeout: Please re-issue your command.')
+            if msg.content.lower() not in ['y', 'yes']:
+                return
+            for member in ctx.guild.members:
+                self.bot.db.update_member(member, xp=0)
+            await ctx.send(f'Turned chat leveling on with **{xp}**xp every message.')
     
-    @is_staff()
     @commands.command()
     async def levelmsg(self, ctx, arg):
         if arg.lower() == 'off':
@@ -56,7 +68,6 @@ class Levels(commands.Cog):
             self.bot.db.update_guild(ctx.guild.id, level_msg=True)
             await ctx.send('Turned chat level messages on.')
 
-    @is_staff()
     @commands.command()
     async def rank(self, ctx, arg, role: discord.Role, level: int=None):
         if arg.lower() == 'add':
@@ -81,3 +92,4 @@ class Levels(commands.Cog):
         embed.add_field(name='Role', value='\n\n'.join(roles), inline=True)
         embed.add_field(name='Role', value='\n\n'.join(levels), inline=True)
         await ctx.send(embed=embed)
+    

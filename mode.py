@@ -1,21 +1,16 @@
 import sys
 import json
+import os
 
 def token_mode():
     print('------ TOKEN MODE ------')
-    print('1 - dev\n2 - prod\n')
+    print('1 - dev')
+    print('2 - prod')
     modeInput = input('Enter mode: ')
-    info = json.load(open('info.json'))
     if modeInput == '1':
-        info['state'] = ':dev: '
-        with open('info.json', 'w+') as data:
-            json.dump(info, data)
-        return 'dev'
+        return os.environ['DEV']
     elif modeInput == '2':
-        info['state'] = ':tophy: '
-        with open('info.json', 'w+') as data:
-            json.dump(info, data)
-        return 'prod'
+        return os.environ['PROD']
     else:
         sys.exit('You must enter a value of 1 or 2! Please run bot again.')
 

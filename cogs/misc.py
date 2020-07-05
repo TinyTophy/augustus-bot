@@ -11,8 +11,6 @@ from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands
 
-from utils import is_admin, is_staff, not_staff, pretty_delta
-
 
 class Misc(commands.Cog):
     def __init__(self, bot):
@@ -29,13 +27,34 @@ class Misc(commands.Cog):
         await ctx.send(' '.join(msg))
 
     @commands.command()
-    async def info(self, ctx, member: discord.Member=None):
+    async def info(self, ctx, member: discord.Member = None):
         if not member:
             member = ctx.author
-        # else:
-        #     member = await discord.ext.commands.MemberConverter().convert(ctx, member)
         create_delta = relativedelta(datetime.now(), member.created_at)
         join_delta = relativedelta(datetime.now(), member.joined_at)
+
+        def pretty_delta(delta):
+            pdelta = {}
+            if delta.years > 0:
+                pdelta['years'] = delta.years
+            if delta.months > 0:
+                pdelta['months'] = delta.months
+            if delta.days > 0:
+                pdelta['days'] = delta.days
+            if delta.hours > 0:
+                pdelta['hours'] = delta.hours
+            if delta.minutes > 0:
+                pdelta['minutes'] = delta.minutes
+
+            pstr = ''
+            for i, k in enumerate(pdelta):
+                if i == len(pdelta) - 1:
+                    pstr = pstr[:-1]
+                    pstr += f' and {pdelta[k]} {k} ago'
+                else:
+                    pstr += f' {pdelta[k]} {k},'
+            return pstr[1:]
+
         cdelta = pretty_delta(create_delta)
         jdelta = pretty_delta(join_delta)
         cutc = member.created_at.strftime('%Y-%m-%d %H:%M:%S UTC')
@@ -59,10 +78,9 @@ class Misc(commands.Cog):
                         value=f'{jutc}\n({jdelta})', inline=True)
         await ctx.send(embed=embed)
 
-    @is_staff()
     @commands.command()
     async def serverinfo(self, ctx):
-        if is_admin(ctx.author):
+        if ctx.author.guild_permissions.administrator:
             vcmembers = {c.name: c.members for c in ctx.guild.voice_channels}
             bychannel = '\n'.join(
                 [f'{k}: {len(vcmembers[k])}' for k in vcmembers])
@@ -124,6 +142,17 @@ class Misc(commands.Cog):
         embed.add_field(name='Source', value=f'[Worldometers]({url})')
         embed.set_footer(text='Last Updated')
         await ctx.send(embed=embed)
+    
+    @commands.command(aliases=['qp'])
+    async def quickpoll(self, ctx, *msg):
+        embed = discord.Embed(title='Quick Poll', description=' '.join(msg), colour=discord.Colour(0x2ecc71))
+        embed.set_author(name=ctx.author, icon_url=ctx.author.avatar_url)
+        message = await ctx.send(embed=embed)
+        await message.add_reaction('👍')
+        await message.add_reaction('👎')
+        await message.add_reaction('🤷')
+        await ctx.message.delete()
+
 
     @commands.is_owner()
     @commands.command()

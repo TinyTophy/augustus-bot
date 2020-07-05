@@ -4,52 +4,21 @@ import logging
 import discord
 from discord.ext import commands
 
-from cogs.bible import Bible
-from cogs.embed import Embed
-from cogs.help import Help
-from cogs.latex import Latex
-from cogs.levels import Levels
-from cogs.log import Log
-from cogs.misc import Misc
-from cogs.mod import Mod
-from cogs.modlog import ModLog
-from cogs.modmail import Modmail
-from cogs.music import Music
-from cogs.quickpoll import Quickpoll
-from cogs.quotes import Quotes
-from cogs.reactionrole import ReactionRole
-from cogs.profile import Profile
-from mode import token_mode
 from mongodb import MongoDB
 
 
 class Augustus(commands.Bot):
-    def __init__(self):
+    def __init__(self, token, db, helpcog, *cogs):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
-        self.db = MongoDB()
-        info = json.load(open('info.json'))
-        token = info['token'][token_mode()]
+        self.db = db
+        super().__init__(
+            command_prefix=lambda bot, message: bot.db.get_guild(message.guild.id)['prefixes'],
+            help_command=helpcog()
+        )
+        for cog in cogs:
+            self.add_cog(cog(self))
 
-        def get_prefix(bot, message):
-            if type(message.channel) == discord.TextChannel:
-                return bot.db.get_guild(message.guild.id)['prefix']
-            else:
-                return ['!']
-
-        super().__init__(command_prefix=get_prefix, help_command=Help())
-        self.add_cog(Bible(self))
-        self.add_cog(Modmail(self))
-        self.add_cog(ModLog(self))
-        self.add_cog(Mod(self))
-        self.add_cog(Misc(self))
-        self.add_cog(Quickpoll(self))
-        self.add_cog(Quotes(self))
-        self.add_cog(Embed(self))
-        self.add_cog(ReactionRole(self))
-        self.add_cog(Levels(self))
-        self.add_cog(Profile(self))
-        # self.add_cog(Music(self))
         self.run(token)
 
     async def on_ready(self):
@@ -86,5 +55,3 @@ class Augustus(commands.Bot):
     
     async def on_guild_remove(self, guild):
         self.db.remove_guild(guild.id)
-    
-    

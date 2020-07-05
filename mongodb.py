@@ -1,36 +1,38 @@
 from pymongo import MongoClient
 import logging
-import json
 from mode import db_mode
 import discord
-from bson.objectid import ObjectId
+import os
 
 
 class MongoDB():
     def __init__(self, logger=None):
-        client = MongoClient(json.load(open('info.json'))['mongo'])
-        mydb = client[db_mode()]
+        client = MongoClient(os.environ['MONGO'])
+        self.prefix = db_mode()
+        mydb = client[self.prefix]
         self.guilds = mydb['guilds']
         self.users = mydb['users']
-        self.info = mydb['info']
+        self.bibles = mydb['bibles']
         if not logger:
             self.logger = logging.getLogger('database')
             logging.basicConfig(level=logging.INFO)
-
 
 # Guild Functions
 
     # Create Function
     def add_guild(self, guild: discord.Guild) -> None:
-        prefix = json.load(open('info.json'))['state']
+        if self.prefix == 'prod':
+            prefix = ':aug: '
+        if self.prefix == 'dev':
+            prefix = ':dev: '
+            
         if not self.guilds.find_one({'_id': guild.id}):
             self.guilds.insert_one(
                 {
                     '_id': guild.id,
-                    'prefix': [prefix, '.'],
+                    'prefixes': [prefix, '.'],
                     'muterole_id': None,
-                    'modrole_id': None,
-                    'modmail_channel_id': None,
+                    'role_perms': None,
                     'modlog_channel_id': None,
                     'log_channel_id': None,
                     'verify_role_id': None,
@@ -40,20 +42,23 @@ class MongoDB():
                     'warn_ban_limit': None,
                     'msg_xp': None,
                     'level_msg': True,
-                    'members': {
-                        str(m.id): {
+                    'members': [
+                        {
+                            'id': m.id,
                             'display_name': f'{m.name}#{m.discriminator}',
                             'roles': [r.id for r in m.roles], 
                             'quotes': [], 
                             'warns': 0, 
                             'xp': 0
-                        } for m in guild.members},
+                        }
+                    for m in guild.members],
+                    'help_channels': [],
                     'roles': [r.id for r in guild.roles],
                     'sticky_roles': [],
                     'autoroles': [],
-                    'rr_messages': {},
+                    'rr_messages': [],
                     'modlog_entries': [],
-                    'ranks': {}
+                    'ranks': []
                 }
             )
             self.logger.log(
@@ -151,6 +156,14 @@ class MongoDB():
         self.logger.log(
             level=logging.INFO, 
             msg=f'Updated member {member.id} in {member.guild.id}'
+        )
+    
+# Help Channels
+
+    def add_help_channel(self, channel: discord.TextChannel, **kwargs):
+        self.guilds.update_one(
+            {'_id': channel.guild.id},
+            {}
         )
 
 

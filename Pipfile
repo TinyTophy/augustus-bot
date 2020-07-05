@@ -16,6 +16,8 @@ dnspython = "*"
 discord-flags = "*"
 pynacl = "*"
 youtube-dl = "*"
+psycopg2 = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 pylint = "*"

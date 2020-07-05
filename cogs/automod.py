@@ -2,8 +2,6 @@ import discord
 from discord.ext import commands
 
 
-class Profile(commands.Cog):
+class Automod(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    

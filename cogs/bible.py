@@ -30,7 +30,6 @@ class Bible(commands.Cog):
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)
-            # print(url)
             response = requests.get(url)
             soup = BeautifulSoup(response.content, 'html.parser')
 
@@ -55,7 +54,11 @@ class Bible(commands.Cog):
             
             span = [i for i, item in enumerate(verselist) if check_int(item)]
             end = verselist.index('Read full chapter')
-            versenums = list(range(int(groups['start']),int(groups['end'])+1))
+            
+            if groups['end']:
+                versenums = list(range(int(groups['start']),int(groups['end'])+1))
+            else:
+                versenums = [int(groups['start'])]
 
             for i, item in enumerate(span):
                 verselist[item] = f'**{versenums[i]}.**'
