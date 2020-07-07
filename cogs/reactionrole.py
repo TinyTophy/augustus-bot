@@ -49,16 +49,6 @@ class ReactionRole(commands.Cog):
 
 # Commands
 
-    @is_staff()
-    @commands.command()
-    async def rrtype(self, ctx, msg: discord.Message, rrtype):
-        if rrtype in ['unique', 'verify', 'normal']:
-            self.bot.db.update_rr(ctx.guild.id, msg.id, type=rrtype)
-            await ctx.send(f'Set message **{msg.id}** to {rrtype}')
-        else:
-            await ctx.send(f'**{rrtype}** is not an accepted argument for this command!')
-
-    @is_staff()
     @commands.command()
     async def rradd(self, ctx, channel:discord.TextChannel, msg: discord.Message, *args):
         rrs = {
@@ -71,8 +61,15 @@ class ReactionRole(commands.Cog):
             await msg.add_reaction(emoji)
 
         await ctx.send(f'Added reaction roles for **{msg.id}**')
+        
+    @commands.command()
+    async def rrtype(self, ctx, msg: discord.Message, rrtype):
+        if rrtype in ['unique', 'verify', 'normal']:
+            self.bot.db.update_rr(ctx.guild.id, msg.id, type=rrtype)
+            await ctx.send(f'Set message **{msg.id}** to {rrtype}')
+        else:
+            await ctx.send(f'**{rrtype}** is not an accepted argument for this command!')
     
-    @is_staff()
     @commands.command()
     async def rrclear(self, ctx, channel: discord.TextChannel, msg: discord.Message):
         rrs = self.bot.db.get_guild(ctx.guild.id)['rr_messages'][str(msg.id)]['reaction_roles']

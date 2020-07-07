@@ -1,11 +1,11 @@
 import re
-
-import discord
-import requests
-from bs4 import BeautifulSoup
-import bs4
-from discord.ext import commands
 import string
+
+import bs4
+import discord
+from bs4 import BeautifulSoup
+from discord.ext import commands
+import aiohttp
 
 
 class Bible(commands.Cog):
@@ -30,8 +30,11 @@ class Bible(commands.Cog):
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content, 'html.parser')
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    response = await r.text()
+            soup = BeautifulSoup(response, 'html.parser')
 
             text_div = re.compile(r"\bresult-text-style-(?:normal|rtl)\b")
             results = soup.find('div', {'class': text_div})
@@ -81,4 +84,3 @@ class Bible(commands.Cog):
     async def setversion(self, ctx, version: str):
         self.bot.db.update_user(ctx.author.id, version=version)
         await ctx.send(f'Set default version to **{version}**.')
-

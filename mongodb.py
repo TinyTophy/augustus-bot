@@ -19,13 +19,13 @@ class MongoDB():
 
 # Guild Functions
 
-    # Create Function
     def add_guild(self, guild: discord.Guild) -> None:
+        global prefix
         if self.prefix == 'prod':
             prefix = ':aug: '
-        if self.prefix == 'dev':
+        elif self.prefix == 'dev':
             prefix = ':dev: '
-            
+
         if not self.guilds.find_one({'_id': guild.id}):
             self.guilds.insert_one(
                 {
@@ -46,52 +46,49 @@ class MongoDB():
                         {
                             'id': m.id,
                             'display_name': f'{m.name}#{m.discriminator}',
-                            'roles': [r.id for r in m.roles], 
-                            'quotes': [], 
-                            'warns': 0, 
+                            'roles': [r.id for r in m.roles],
+                            'quotes': [],
+                            'warns': 0,
                             'xp': 0
                         }
-                    for m in guild.members],
+                        for m in guild.members],
                     'help_channels': [],
                     'roles': [r.id for r in guild.roles],
                     'sticky_roles': [],
                     'autoroles': [],
-                    'rr_messages': [],
+                    'reaction_roles': [],
                     'modlog_entries': [],
                     'ranks': []
                 }
             )
             self.logger.log(
-                level=logging.INFO, 
+                level=logging.INFO,
                 msg=f'Added guild {guild.id}'
             )
 
-    # Read Functions
     def get_guild(self, guild_id: int) -> dict:
         return self.guilds.find_one(
             {
                 '_id': guild_id
             }
         )
-    
+
     def get_all_guilds(self) -> list:
         return list(self.guilds.find())
 
-    # Update Function
     def update_guild(self, guild_id: int, **kwargs) -> None:
         self.guilds.update_one(
-            {'_id': guild_id}, 
+            {'_id': guild_id},
             {'$set': {
-                k:kwargs[k] for k in kwargs
+                k: kwargs[k] for k in kwargs
                 }
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Updated guild {guild_id}'
         )
-    
-    # Delete Function
+
     def remove_guild(self, guild_id: int) -> None:
         self.guilds.delete_one(
             {
@@ -99,65 +96,67 @@ class MongoDB():
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Deleted guild {guild_id}'
         )
 
-
 # Member Functions
-    
-    # Create Function
+
     def add_member(self, member: discord.Member) -> None:
-        members = self.guilds.find_one({'_id': member.guild.id})['members']
-        if str(member.id) not in members:
-            self.guilds.update_one(
-                {
-                    '_id': member.guild.id
-                },
-                {'$set': {
-                    f'members.{member.id}': {
-                        'display_name': f'{member.name}#{member.discriminator}',
-                        'roles': [r.id for r in member.roles], 
-                        'quotes': [], 
-                        'warns': 0, 
-                        'xp': 0
-                        }
-                    }
-                }
-            )
-            self.logger.log(
-                level=logging.INFO,
-                msg=f'Added member {member.id} in {member.guild.id}'
-            )
-    
-    # Read Functions
-    def get_member(self, member: discord.Member) -> dict:
-        members = self.guilds.find_one(
+        self.guilds.update_one(
             {
                 '_id': member.guild.id
-            }
-        )['members']
-        if str(member.id) in members:
-            return members[str(member.id)]
-    
+            },
+            {'$addToSet': {
+                'members': {
+                    'id': member.id,
+                    'display_name': f'{member.name}#{member.discriminator}',
+                    'roles': [r.id for r in member.roles],
+                    'quotes': [],
+                    'warns': 0,
+                    'xp': 0
+                    }
+                }
+            }    
+        )
+        self.logger.log(
+            level=logging.INFO,
+            msg=f'Added member {member.id} in {member.guild.id}'
+        )
+
+    def get_member(self, member: discord.Member) -> dict:
+        try:
+            return self.guilds.find_one(
+                {
+                    '_id': member.guild.id, 
+                    'members.id': member.id
+                },
+                {
+                    'members.$': 1
+                }
+            )['members'][0]
+        except Exception as e:
+            return e
+
+
     def get_all_members(self, guild_id: int) -> list:
         return self.guilds.find_one({'_id': guild_id})['members']
 
     def update_member(self, member: discord.Member, **kwargs) -> None:
         self.guilds.update_one(
             {
-                '_id': member.guild.id
-            }, 
+                'members.id': member.id
+            },
             {'$set': {
-                f'members.{member.id}.{k}': kwargs[k] for k in kwargs
-                }
+                f'members.$.{k}': kwargs[k] for k in kwargs
+                } 
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Updated member {member.id} in {member.guild.id}'
         )
-    
+
 # Help Channels
 
     def add_help_channel(self, channel: discord.TextChannel, **kwargs):
@@ -166,41 +165,36 @@ class MongoDB():
             {}
         )
 
-
 # Role Functions
 
-    # Create Function
     def add_role(self, role: discord.Role):
         self.guilds.update_one(
-            {'_id': role.guild.id}, 
+            {'_id': role.guild.id},
             {'$addToSet': {
                 'roles': role.id
-                }
+            }
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Added role {role.id} for guild {role.guild.id}'
         )
-    
-    # Delete Function
+
     def remove_role(self, role: discord.Role):
         self.guilds.update_one(
-            {'_id': role.guild.id}, 
+            {'_id': role.guild.id},
             {'$pull': {
                 'roles': role.id
-                }
+            }
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Removed role {role.id} from guild {role.guild.id}'
         )
 
-
 # Reaction Role Functions
 
-    # Create Function
     def add_rr(self, guild_id: int, msg_id: int, rr: dict) -> None:
         rr_messages = self.guilds.find_one(
             {
@@ -210,10 +204,10 @@ class MongoDB():
 
         if str(msg_id) not in rr_messages:
             self.guilds.update_one(
-                {'_id': guild_id}, 
+                {'_id': guild_id},
                 {'$set': {
                     f'rr_messages.{msg_id}': {'type': 'normal', 'reaction_roles': rr}
-                    } 
+                }
                 }
             )
 
@@ -221,16 +215,15 @@ class MongoDB():
             self.guilds.update_one(
                 {'_id': guild_id},
                 {'$set': {
-                    f'rr_messages.{msg_id}.reaction_roles.{k}': rr[k] 
-                    } for k in rr
+                    f'rr_messages.{msg_id}.reaction_roles.{k}': rr[k]
+                } for k in rr
                 }
             )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Added reaction role {rr}'
         )
-    
-    # Update Function
+
     def update_rr(self, guild_id: int, msg_id: int, **kwargs) -> None:
         rr_messages = self.guilds.find_one(
             {
@@ -242,31 +235,29 @@ class MongoDB():
             return
 
         self.guilds.update_one(
-            {'_id': guild_id}, 
+            {'_id': guild_id},
             {'$set': {
                 f'rr_messages.{msg_id}.{k}': kwargs[k]
-                } for k in kwargs
+            } for k in kwargs
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Updated reaction role type for {msg_id}'
         )
-    
-    # Remove Function
+
     def remove_rr(self, guild_id: int, msg_id: int):
         self.guilds.update_one(
             {'_id': guild_id},
             {'$unset': {
                 f'rr_messages.{msg_id}': ''
-                }
+            }
             }
         )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Removed reaction role for {msg_id} in {guild_id}'
         )
-
 
 # Rank Functions
 
@@ -275,16 +266,16 @@ class MongoDB():
         if str(role.id) not in guild['ranks']:
             self.guilds.update_one({'_id': guild_id}, {'$set': {f'ranks.{role.id}': level}})
             self.logger.log(
-                level=logging.INFO, 
+                level=logging.INFO,
                 msg=f'Added rank for {role.id} for {guild_id}'
             )
-    
+
     def delete_rank(self, guild_id: int, role_id: int) -> None:
         guild = self.guilds.find_one({'_id': guild_id})
         if str(role_id) in guild['ranks']:
             self.guilds.update_one({'_id': guild_id}, {'$unset': {'ranks': str(role_id)}})
             self.logger.log(
-                level=logging.INFO, 
+                level=logging.INFO,
                 msg=f'Removed rank for {role_id} for {guild_id}'
             )
 
@@ -299,10 +290,10 @@ class MongoDB():
                 }
             )
             self.logger.log(
-                level=logging.INFO, 
+                level=logging.INFO,
                 msg=f'Added user {user_id}'
             )
-    
+
     def add_users(self, users: list) -> None:
         user_ids = [u['_id'] for u in self.users.find()]
         users = [{'_id': u.id, 'version': 'NRSV'} for u in users if u.id not in user_ids]
@@ -310,22 +301,22 @@ class MongoDB():
             return
         self.users.insert_many(users)
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Added new users'
         )
 
     def update_user(self, user_id: int, **kwargs) -> None:
         self.users.update_one(
-            {'_id': user_id}, 
+            {'_id': user_id},
             {'$set': {
-                k:kwargs[k] for k in kwargs
-                }
+                k: kwargs[k] for k in kwargs
             }
-        ) 
+            }
+        )
         self.logger.log(
-            level=logging.INFO, 
+            level=logging.INFO,
             msg=f'Updated user {user_id}'
         )
-    
+
     def find_user(self, user_id: int) -> dict:
         return self.users.find_one({'_id': user_id})

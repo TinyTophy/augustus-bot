@@ -1,6 +1,6 @@
 from augustus import Augustus
 # from cogs.automod import Automod
-# from cogs.bible import Bible
+from cogs.bible import Bible
 # from cogs.embed import Embed
 from cogs.help import Help
 # from cogs.helpchannel import HelpChannel
@@ -23,7 +23,7 @@ if __name__ == "__main__":
         MongoDB(),
         Help,
         # Automod,
-        # Bible,
+        Bible,
         # Embed,
         HelpChannel,
         # Latex,

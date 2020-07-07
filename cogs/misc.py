@@ -4,9 +4,9 @@ import math
 import re
 from datetime import datetime
 
+import aiohttp
 import discord
 import humanize
-import requests
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
 from discord.ext import commands
@@ -112,8 +112,10 @@ class Misc(commands.Cog):
             url = 'https://www.worldometers.info/coronavirus/'
             img_url = 'https://www.rivertowns.net/incoming/4991938-wtw6q9-RTSA-coronavirus-CDC.jpg/alternates/BASE_LANDSCAPE/RTSA%20coronavirus%20CDC.jpg'
             name = 'World Stats'
-            page = requests.get(url)
-            soup = BeautifulSoup(page.content, 'html.parser')
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    response = await r.text()
+            soup = BeautifulSoup(response, 'html.parser')
             last = soup.body.find(text=re.compile('Last updated')).replace(
                 'Last updated:', '').strip()
             lastdate = datetime.strptime(last, '%B %d, %Y, %H:%M GMT')
@@ -121,8 +123,10 @@ class Misc(commands.Cog):
             items = [r.span.contents[0].strip() for r in results if r.span]
         else:
             url = f'https://www.worldometers.info/coronavirus/country/{country.lower()}/'
-            page = requests.get(url)
-            soup = BeautifulSoup(page.content, 'html.parser')
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    response = await r.text()
+            soup = BeautifulSoup(response, 'html.parser')
             last = soup.body.find(text=re.compile('Last updated')).replace(
                 'Last updated:', '').strip()
             lastdate = datetime.strptime(last, '%B %d, %Y, %H:%M GMT')
