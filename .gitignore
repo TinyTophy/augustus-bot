@@ -12,3 +12,4 @@ apibible.py
 .idea
 .env
 nrsv.py
+.mypy_cache

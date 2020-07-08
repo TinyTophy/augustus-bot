@@ -19,9 +19,6 @@ from mongodb import MongoDB
 
 if __name__ == "__main__":
     Augustus(
-        token_mode(),
-        MongoDB(),
-        Help,
         # Automod,
         Bible,
         # Embed,
@@ -32,5 +29,8 @@ if __name__ == "__main__":
         Misc,
         # Mod,
         # Profile,
-        # ReactionRole
+        # ReactionRole,
+        token=token_mode(),
+        db=MongoDB(),
+        help=Help,
     )

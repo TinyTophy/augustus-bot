@@ -1,25 +1,26 @@
-import json
 import logging
 
 import discord
 from discord.ext import commands
 
-from mongodb import MongoDB
-
 
 class Augustus(commands.Bot):
-    def __init__(self, token, db, help, *cogs):
+    def __init__(self, *args, **kwargs):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
-        self.db = db
+        self.db = kwargs['db']
+        if 'help' not in kwargs:
+            help = commands.DefaultHelpCommand
+        else:
+            help = kwargs['help']
         super().__init__(
             command_prefix=lambda bot, message: bot.db.get_guild(message.guild.id)['prefixes'],
             help_command=help()
         )
-        for cog in cogs:
+        for cog in args:
             self.add_cog(cog(self))
 
-        self.run(token)
+        self.run(kwargs['token'])
 
     async def on_ready(self):
         for guild in self.guilds:
