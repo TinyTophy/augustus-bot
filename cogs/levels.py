@@ -12,25 +12,27 @@ class Levels(commands.Cog):
             return
 
         guild = self.bot.db.get_guild(message.guild.id)
-        if not guild['msg_xp']:
+        if not guild.msg_xp:
             return
 
         member = self.bot.db.get_member(message.author)
-        level = int((member['xp'] + guild['msg_xp'])**(1/2) / 5)
-        if level > int(member['xp']**(1/2) / 5) and guild['level_msg']:
+        level = int((member.xp + guild.msg_xp)**(1/2) / 5)
+        if level > int(member.xp**(1/2) / 5) and guild.level_msg:
             await message.channel.send(f'{message.author.mention} just reached level **{level}**!')
         
-        self.bot.db.update_member(message.author, xp=member['xp']+guild['msg_xp'])
+        self.bot.db.update_member(message.author, xp=member.xp+guild.msg_xp)
 
-        ranks = guild['ranks']
-        if not ranks:
+        if not guild.ranks:
             return
-        
-        roles = [message.guild.get_role(int(r)) for r in ranks if ranks[r]==level]
-        roles = [r for r in roles if r not in message.author.roles]
-        await message.author.add_roles(*roles)
-        await message.author.remove_roles()
-        
+
+        for r in guild.ranks:
+            role = message.guild.get_role(r['role_id'])
+            if level == r['level'] and role not in message.author.roles:
+                await message.author.add_roles(role)
+
+        last_roles = [message.guild.get_role(r['role_id']) for r in guild.ranks if r['level'] < level]
+        await message.author.remove_roles(*last_roles)
+
     @commands.command()
     async def level(self, ctx, member=None):
         pass
@@ -79,7 +81,7 @@ class Levels(commands.Cog):
     
     @commands.command()
     async def ranks(self, ctx):
-        ranks = self.bot.db.get_guild(ctx.guild.id)['ranks']
+        ranks = self.bot.db.get_guild(ctx.guild.id).ranks
 
         if not ranks:
             await ctx.send('This server has no ranks.')

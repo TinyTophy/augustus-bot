@@ -26,7 +26,7 @@ class Bible(commands.Cog):
         async with message.channel.typing():
             groups = match.groupdict()
             if not groups['version']:
-                groups['version'] = self.bot.db.find_user(message.author.id)['version']
+                groups['version'] = self.bot.db.get_user(message.author.id).version
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)
@@ -78,6 +78,7 @@ class Bible(commands.Cog):
             embed = discord.Embed(description=desc)
             embed.set_footer(text=footer)
             await message.channel.send(embed=embed)
+            return
                 
 
     @commands.command()

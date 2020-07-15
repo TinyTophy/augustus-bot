@@ -11,7 +11,7 @@ class ModLog(commands.Cog):
 
     # Listeners
     @commands.Cog.listener()
-    async def on_member_ban(self, guild, member: discord.User):
+    async def on_member_ban(self, guild: discord.Guild, member: discord.User):
         audit = [e async for e in guild.audit_logs(action=discord.AuditLogAction.ban)]
         dbguild = self.bot.db.get_guild(guild.id)
         mlchannel = guild.get_channel(dbguild['modlog_channel_id'])

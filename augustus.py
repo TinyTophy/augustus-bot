@@ -2,30 +2,34 @@ import logging
 
 import discord
 from discord.ext import commands
+from models.user import User
+from models.guild import Guild
 
 
 class Augustus(commands.Bot):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)
-        self.db = kwargs['db']
+        self.db = kwargs['db'](self)
         if 'help' not in kwargs:
             help = commands.DefaultHelpCommand
         else:
             help = kwargs['help']
         super().__init__(
-            command_prefix=lambda bot, message: bot.db.get_guild(message.guild.id)['prefixes'],
+            command_prefix=lambda bot, message: bot.db.get_guild(message.guild.id).prefixes,
             help_command=help()
         )
-        for cog in args:
-            self.add_cog(cog(self))
+        if 'cogs' in kwargs:
+            for cog in kwargs['cogs']:
+                self.add_cog(cog(self))
 
         self.run(kwargs['token'])
 
     async def on_ready(self):
         for guild in self.guilds:
-            self.db.add_guild(guild)
-            self.db.add_users(guild.members)
+            self.db.add_guild(Guild(self, guild))
+            self.db.add_users([User(self, u) for u in guild.members])
+        
         print(f'Logged in as {self.user}')
         print('-----------------------')
 
@@ -41,8 +45,6 @@ class Augustus(commands.Bot):
     async def on_member_update(self, before, after):
         if before.roles != after.roles:
             self.db.update_member(after, roles=[r.id for r in after.roles])
-            member = self.db.get_member(after)
-            print(member)
 
     async def on_guild_role_create(self, role):
         self.db.add_role(role)

@@ -27,6 +27,6 @@ from discord.ext import commands
 #         await self.get_destination().send(embed=embed)
     
 
-class Help(commands.MinimalHelpCommand):
+class Help(commands.DefaultHelpCommand):
     def get_command_signature(self, command):
         return '{0.clean_prefix}{1.qualified_name} {1.signature}'.format(self, command)

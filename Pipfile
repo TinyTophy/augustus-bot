@@ -19,6 +19,7 @@ youtube-dl = "*"
 psycopg2 = "*"
 sqlalchemy = "*"
 mypy = "*"
+pylint = "*"
 
 [dev-packages]
 pylint = "*"
