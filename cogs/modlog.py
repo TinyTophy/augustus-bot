@@ -4,8 +4,6 @@ import discord
 from discord.ext import commands
 import asyncio
 
-from utils import is_staff, is_admin
-
 
 class ModLog(commands.Cog):
     def __init__(self, bot):
@@ -13,15 +11,14 @@ class ModLog(commands.Cog):
 
     # Listeners
     @commands.Cog.listener()
-    async def on_member_ban(self, guild, member: discord.User):
-        await asyncio.sleep(2)
-        audit = [e async for e in guild.audit_logs(action=discord.AuditLogAction.ban)][0]
+    async def on_member_ban(self, guild: discord.Guild, member: discord.User):
+        audit = [e async for e in guild.audit_logs(action=discord.AuditLogAction.ban)]
         dbguild = self.bot.db.get_guild(guild.id)
         mlchannel = guild.get_channel(dbguild['modlog_channel_id'])
         case = len(dbguild['modlog_entries']) + 1
-        p = dbguild['prefix']
+        p = dbguild['prefixes']
         if audit.reason == None:
-            reason = f'No reason given, use `{p}reason {case} <text>` to add one'
+            reason = f'No reason given, use `{p[1]}reason {case} <text>` to add one'
         else:
             reason = audit.reason
         embed = discord.Embed(color=discord.Color(

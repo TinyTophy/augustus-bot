@@ -10,3 +10,6 @@ schema.sql
 apibible.py
 .vscode
 .idea
+.env
+nrsv.py
+.mypy_cache

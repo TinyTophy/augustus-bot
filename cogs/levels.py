@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from utils import is_staff
 
 
 class Levels(commands.Cog):
@@ -13,30 +12,31 @@ class Levels(commands.Cog):
             return
 
         guild = self.bot.db.get_guild(message.guild.id)
-        if not guild['msg_xp']:
+        if not guild.msg_xp:
             return
 
         member = self.bot.db.get_member(message.author)
-        level = int((member['xp'] + guild['msg_xp'])**(1/2) / 5)
-        if level > int(member['xp']**(1/2) / 5) and guild['level_msg']:
+        level = int((member.xp + guild.msg_xp)**(1/2) / 5)
+        if level > int(member.xp**(1/2) / 5) and guild.level_msg:
             await message.channel.send(f'{message.author.mention} just reached level **{level}**!')
         
-        self.bot.db.update_member(message.author, xp=member['xp']+guild['msg_xp'])
+        self.bot.db.update_member(message.author, xp=member.xp+guild.msg_xp)
 
-        ranks = guild['ranks']
-        if not ranks:
+        if not guild.ranks:
             return
-        
-        roles = [message.guild.get_role(int(r)) for r in ranks if ranks[r]==level]
-        roles = [r for r in roles if r not in message.author.roles]
-        await message.author.add_roles(*roles)
-        await message.author.remove_roles()
-        
+
+        for r in guild.ranks:
+            role = message.guild.get_role(r['role_id'])
+            if level == r['level'] and role not in message.author.roles:
+                await message.author.add_roles(role)
+
+        last_roles = [message.guild.get_role(r['role_id']) for r in guild.ranks if r['level'] < level]
+        await message.author.remove_roles(*last_roles)
+
     @commands.command()
     async def level(self, ctx, member=None):
         pass
-    
-    @is_staff()
+
     @commands.command()
     async def levels(self, ctx, arg, xp:int=5):
         if arg.lower() == 'off':
@@ -45,8 +45,23 @@ class Levels(commands.Cog):
         elif arg.lower() == 'on':
             self.bot.db.update_guild(ctx.guild.id, msg_xp=xp)
             await ctx.send(f'Turned chat leveling on with **{xp}**xp every message.')
+        elif arg.lower() == 'reset':
+            await ctx.send("This will **permanently** reset all members' xp. To confirm type **y**. To cancel type **n**")
+            try:
+                msg = await self.bot.wait_for(
+                    'message', 
+                    timeout=60, check=lambda m: m.author == ctx.author 
+                    and m.content.lower() in ['y', 'n', 'yes', 'no']
+                )
+            except:
+                await ctx.send('Timeout: Please re-issue your command.')
+                return
+            if msg.content.lower() not in ['y', 'yes']:
+                return
+            for member in ctx.guild.members:
+                self.bot.db.update_member(member, xp=0)
+            await ctx.send(f'Turned chat leveling on with **{xp}**xp every message.')
     
-    @is_staff()
     @commands.command()
     async def levelmsg(self, ctx, arg):
         if arg.lower() == 'off':
@@ -56,7 +71,6 @@ class Levels(commands.Cog):
             self.bot.db.update_guild(ctx.guild.id, level_msg=True)
             await ctx.send('Turned chat level messages on.')
 
-    @is_staff()
     @commands.command()
     async def rank(self, ctx, arg, role: discord.Role, level: int=None):
         if arg.lower() == 'add':
@@ -68,7 +82,7 @@ class Levels(commands.Cog):
     
     @commands.command()
     async def ranks(self, ctx):
-        ranks = self.bot.db.get_guild(ctx.guild.id)['ranks']
+        ranks = self.bot.db.get_guild(ctx.guild.id).ranks
 
         if not ranks:
             await ctx.send('This server has no ranks.')
@@ -81,3 +95,4 @@ class Levels(commands.Cog):
         embed.add_field(name='Role', value='\n\n'.join(roles), inline=True)
         embed.add_field(name='Role', value='\n\n'.join(levels), inline=True)
         await ctx.send(embed=embed)
+    

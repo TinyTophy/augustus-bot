@@ -1,11 +1,11 @@
 import re
-
-import discord
-import requests
-from bs4 import BeautifulSoup
-import bs4
-from discord.ext import commands
 import string
+
+import bs4
+import discord
+from bs4 import BeautifulSoup
+from discord.ext import commands
+import aiohttp
 
 
 class Bible(commands.Cog):
@@ -26,13 +26,15 @@ class Bible(commands.Cog):
         async with message.channel.typing():
             groups = match.groupdict()
             if not groups['version']:
-                groups['version'] = self.bot.db.find_user(message.author.id)['version']
+                groups['version'] = self.bot.db.get_user(message.author.id).version
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)
-            # print(url)
-            response = requests.get(url)
-            soup = BeautifulSoup(response.content, 'html.parser')
+
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as r:
+                    response = await r.text()
+            soup = BeautifulSoup(response, 'html.parser')
 
             text_div = re.compile(r"\bresult-text-style-(?:normal|rtl)\b")
             results = soup.find('div', {'class': text_div})
@@ -55,7 +57,11 @@ class Bible(commands.Cog):
             
             span = [i for i, item in enumerate(verselist) if check_int(item)]
             end = verselist.index('Read full chapter')
-            versenums = list(range(int(groups['start']),int(groups['end'])+1))
+            
+            if groups['end']:
+                versenums = list(range(int(groups['start']),int(groups['end'])+1))
+            else:
+                versenums = [int(groups['start'])]
 
             for i, item in enumerate(span):
                 verselist[item] = f'**{versenums[i]}.**'
@@ -72,10 +78,10 @@ class Bible(commands.Cog):
             embed = discord.Embed(description=desc)
             embed.set_footer(text=footer)
             await message.channel.send(embed=embed)
+            return
                 
 
     @commands.command()
     async def setversion(self, ctx, version: str):
         self.bot.db.update_user(ctx.author.id, version=version)
         await ctx.send(f'Set default version to **{version}**.')
-

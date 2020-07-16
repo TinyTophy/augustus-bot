@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import logging
-from utils import is_staff, not_staff, is_admin
 from datetime import datetime
 
 
@@ -17,7 +16,6 @@ class Mod(commands.Cog):
 
 # Commands
 
-    @is_staff()
     @commands.command()
     async def autorole(self, ctx, role: discord.Role):
         roles = self.bot.db.get_guild(ctx.guild.id)['autoroles']
@@ -27,7 +25,6 @@ class Mod(commands.Cog):
             await m.add_roles(role)
         await ctx.send(f'Added **{role}** to autoroles.')
 
-    @is_staff()
     @commands.command()
     async def stickyrole(self, ctx, role: discord.Role):
         roles = self.bot.db.get_guild(ctx.guild.id)['sticky_roles']
@@ -35,13 +32,11 @@ class Mod(commands.Cog):
         self.bot.db.update_guild(ctx.guild.id, {'sticky_roles': roles})
         await ctx.send(f'Added **{role}** to sticky roles.')
 
-    @is_staff()
     @commands.command()
     async def purge(self, ctx, amount=10):
         deleted = await ctx.channel.purge(limit=amount+1)
         await ctx.send(f'Deleted **{len(deleted)-1}** messages.', delete_after=5)
 
-    @is_staff()
     @commands.command()
     async def mute(self, ctx, member: discord.Member, reason=None):
         modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
@@ -66,7 +61,6 @@ class Mod(commands.Cog):
         else:
             await ctx.send(f'You lack the permissions to mute **{member}**!')
     
-    @is_staff()
     @commands.command()
     async def warn(self, ctx, member: discord.Member, reason):
         modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
@@ -99,7 +93,6 @@ class Mod(commands.Cog):
 
     #     await ctx.send(f'I will now **{punish}** members after **{limit}** warnings.')
 
-    @is_staff()
     @commands.command()
     async def unmute(self, ctx, member: discord.Member):
         modrole = ctx.guild.get_role(self.bot.db.get_guild(ctx.guild.id)['modrole_id'])
@@ -124,7 +117,6 @@ class Mod(commands.Cog):
         else:
             await ctx.send(f'You lack the permissions to unmute {member.mention}! You cannot unmute moderators.')
 
-    @is_staff()
     @commands.command()
     async def move(self, ctx, ch1: discord.VoiceChannel, ch2: discord.VoiceChannel):
         for member in ch1.members:
@@ -204,7 +196,6 @@ class Mod(commands.Cog):
         else:
             await ctx.send('You must be an admin to set the modrole!')
 
-    @is_staff()
     @commands.command()
     async def verify(self, ctx, member: discord.Member, *msg_ids):
         g = self.bot.db.get_guild(ctx.guild.id)
@@ -245,3 +236,8 @@ class Mod(commands.Cog):
             await ctx.send(f'Set verification channel to {channel.mention}')
         else:
             await ctx.send('You must be an admin to set the verify log!')
+
+    @commands.command()
+    async def blacklist(self, ctx, uuid):
+        await ctx.guild.ban(discord.Object(id=uuid))
+        await ctx.send(f'Blacklisted user **{uuid}**')
