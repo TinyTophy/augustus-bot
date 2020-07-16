@@ -55,6 +55,7 @@ class Levels(commands.Cog):
                 )
             except:
                 await ctx.send('Timeout: Please re-issue your command.')
+                return
             if msg.content.lower() not in ['y', 'yes']:
                 return
             for member in ctx.guild.members:
