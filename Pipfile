@@ -17,6 +17,7 @@ pynacl = "*"
 youtube-dl = "*"
 mypy = "*"
 pylint = "*"
+asyncpg = "*"
 
 [dev-packages]
 pylint = "*"

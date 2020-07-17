@@ -20,6 +20,7 @@ class MongoDB():
         self.guilds = mydb['guilds']
         self.users = mydb['users']
         self.bibles = mydb['bibles']
+        # self.guilds.create_index('members.id')
         if not logger:
             self.logger = logging.getLogger('database')
             logging.basicConfig(level=logging.INFO)
@@ -37,12 +38,12 @@ class MongoDB():
             return None
 
     def get_guild(self, guild_id: int) -> dict:
-        return Guild(self.bot, **self.guilds.find_one(
+        guild = self.guilds.find_one(
                 {
                     '_id': guild_id
                 }
             )
-        )
+        return Guild(self.bot, **guild) if guild else None
 
     def get_all_guilds(self) -> list:
         return [Guild(self.bot, **g) for g in self.guilds.find()]
@@ -92,7 +93,7 @@ class MongoDB():
         )
 
     def get_member(self, member: discord.Member) -> dict:
-        return Member(self.bot, **self.guilds.find_one(
+        member = self.guilds.find_one(
             {
                 '_id': member.guild.id, 
                 'members.id': member.id
@@ -100,7 +101,9 @@ class MongoDB():
             {
                 'members.$': 1
             }
-        )['members'][0])
+        )
+        return Member(self.bot, **member['members'][0]) if member else None
+
 
     def get_all_members(self, guild_id: int) -> list:
         return [Member(self.bot, **m) for m in self.guilds.find_one({'_id': guild_id})['members']]
@@ -142,6 +145,18 @@ class MongoDB():
             level=logging.INFO,
             msg=f'Added role {role.id} for guild {role.guild.id}'
         )
+    
+    def get_role(self, role: discord.Role):
+        dbrole = self.guilds.find_one(
+            {
+                '_id': role.guild.id,
+                'roles.id': role.id
+            },
+            {
+                'roles.$': 1
+            }
+        )
+        return Role(self.bot, **dbrole) if dbrole else None
 
     def remove_role(self, role: discord.Role):
         self.guilds.update_one(
@@ -254,15 +269,14 @@ class MongoDB():
             return e
 
     def add_users(self, users: list) -> None:
-        # user_ids = [u['_id'] for u in self.users.find()]
-        # users = [u for u in users if u.id not in user_ids]
-        # if not users:
-        #     return
-        self.users.insert_many([u.__dict__ for u in users])
-        self.logger.log(
-            level=logging.INFO,
-            msg=f'Added new users'
-        )
+        dbusers = self.users.find()
+        dbusers = [u.__dict__ for u in users if u.__dict__ not in dbusers]
+        if dbusers:
+            self.users.insert_many(dbusers)
+            self.logger.log(
+                level=logging.INFO,
+                msg=f'Added new users'
+            )
 
     def update_user(self, user_id: int, **kwargs) -> None:
         self.users.update_one(
