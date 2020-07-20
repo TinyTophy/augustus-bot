@@ -6,7 +6,7 @@ from models.user import User
 from models.guild import Guild
 
 
-class Augustus(commands.Bot):
+class Bot(commands.Bot):
     def __init__(self, **kwargs):
         self.logger = logging.getLogger('discord')
         logging.basicConfig(level=logging.INFO)

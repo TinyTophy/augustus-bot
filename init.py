@@ -1,4 +1,4 @@
-from augustus import Augustus
+from bot import Bot
 from cogs.automod import Automod
 from cogs.bible import Bible
 from cogs.embed import Embed
@@ -17,7 +17,7 @@ from mode import token_mode
 from mongodb import MongoDB
 
 if __name__ == "__main__":
-    Augustus(
+    Bot(
         token=token_mode(),
         db=MongoDB,
         help=Help,
