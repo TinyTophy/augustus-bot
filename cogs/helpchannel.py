@@ -39,7 +39,7 @@ class HelpChannel(commands.Cog):
     
     @commands.command()
     async def setassign(self, ctx, channel: discord.TextChannel, assign: str):
-        return
+        return None
 
     @commands.command()
     async def setresolve(self, ctx, channel: discord.TextChannel, resolve: str):
