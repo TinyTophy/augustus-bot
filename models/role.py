@@ -4,7 +4,7 @@ import discord
 class Role:
     def __init__(self, bot, role: discord.Role = None, **kwargs):
         if role:
-            dbr = bot.db.get_role(role.id) 
+            dbr = bot.db.get_role(role) 
             if dbr:
                 self.__dict__ = dbr.__dict__
             else:

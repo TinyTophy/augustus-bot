@@ -27,8 +27,8 @@ class Augustus(commands.Bot):
 
     async def on_ready(self):
         for guild in self.guilds:
-            self.db.add_guild(Guild(self, guild))
-            self.db.add_users([User(self, u) for u in guild.members])
+            self.db.add_guild(Guild(self, guild, False))
+            self.db.add_users([User(self, u, False) for u in guild.members])
         
         print(f'Logged in as {self.user}')
         print('-----------------------')

@@ -1,10 +1,12 @@
 class User:
-    def __init__(self, bot, user=None, **kwargs):
+    def __init__(self, bot, user=None, query=True, **kwargs):
+        dbu = True
         if user:
-            dbu = bot.db.get_user(user.id)
-            if dbu:
-                self.__dict__ = dbu
-            else:
+            if query:
+                dbu = bot.db.get_user(user.id)
+                if dbu:
+                    self.__dict__ = dbu.__dict__
+            if not query or (query and not dbu):
                 self._id = user.id
                 self.version = 'NRSV'
         else:
