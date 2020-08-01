@@ -26,7 +26,8 @@ class Bible(commands.Cog):
         async with message.channel.typing():
             groups = match.groupdict()
             if not groups['version']:
-                groups['version'] = self.bot.db.get_user(message.author.id).version
+                version_id = await self.bot.db.get_user(message.author.id)['version_id']
+                groups['version'] = await self.bot.db.get_bible_version()
             
             groups['book'] = groups['book'].replace(' ', '%')
             url = "https://www.biblegateway.com/passage/?search={book}+{chapter}:{verses}&version={version}".format(**groups)

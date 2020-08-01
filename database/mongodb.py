@@ -20,7 +20,6 @@ class MongoDB():
         self.guilds = mydb['guilds']
         self.users = mydb['users']
         self.bibles = mydb['bibles']
-        # self.guilds.create_index('members.id')
         if not logger:
             self.logger = logging.getLogger('database')
             logging.basicConfig(level=logging.INFO)
