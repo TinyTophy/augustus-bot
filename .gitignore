@@ -13,3 +13,4 @@ apibible.py
 .env
 nrsv.py
 .mypy_cache
+.github

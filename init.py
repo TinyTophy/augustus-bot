@@ -13,26 +13,27 @@ from cogs.helpchannel import HelpChannel
 from cogs.music import Music
 from cogs.quotes import Quotes
 from cogs.reactionrole import ReactionRole
-from mode import token_mode
-from mongodb import MongoDB
+from mode import token_mode, db_mode
+from database.postgresql import Postgresql
 
 if __name__ == "__main__":
-    Bot(
-        token=token_mode(),
-        db=MongoDB,
+    bot = Bot(
+        db=Postgresql(db_mode()),
         help=Help,
         cogs=[
         # Automod,
         Bible,
-        Embed,
-        HelpChannel,
+        # Embed,
+        # HelpChannel,
         # Latex,
-        Levels,
+        # Levels,
         # Log,
         Misc,
         # Mod,
         # Music,
-        Quotes,
+        # Quotes,
         # ReactionRole
         ]
     )
+    bot.run(token_mode())
+
